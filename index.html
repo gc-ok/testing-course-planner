@@ -1,6 +1,6 @@
 <style>
-  /* Scoped styles to prevent Finalsite conflicts */
-  #mhs-app-root { font-family: 'Roboto', sans-serif; background: #fff; color: #333; min-height: 800px; display: flex; flex-direction: column; position: relative; }
+  /* --- SCOPED CSS (Safe for Finalsite) --- */
+  #mhs-app-root { font-family: 'Roboto', sans-serif; background: #fff; color: #333; min-height: 800px; display: flex; flex-direction: column; position: relative; max-width: 1200px; margin: 0 auto; }
   
   /* Utils */
   #mhs-app-root .hidden { display: none !important; }
@@ -9,14 +9,13 @@
   @keyframes mhsFadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
   
   /* Layout */
-  #mhs-app-root .top-strip { background: #666; color: white; text-align: right; padding: 5px 20px; font-size: 12px; }
-  #mhs-app-root .header { padding: 15px 20px; border-bottom: 4px solid #D21F28; }
-  #mhs-app-root .title { color: #D21F28; font-size: 26px; font-weight: 700; }
-  #mhs-app-root .main { max-width: 1200px; margin: 0 auto; width: 100%; padding: 20px; flex: 1; }
-
+  #mhs-app-root .header { padding: 15px 0; border-bottom: 4px solid #D21F28; margin-bottom: 20px; }
+  #mhs-app-root .title { color: #D21F28; font-size: 26px; font-weight: 700; line-height: 1.2; }
+  
   /* Components */
-  #mhs-app-root .btn { padding: 12px 24px; font-weight: 700; border: none; border-radius: 4px; cursor: pointer; display:inline-block; margin:5px;}
+  #mhs-app-root .btn { padding: 12px 24px; font-weight: 700; border: none; border-radius: 4px; cursor: pointer; display:inline-block; margin:5px; transition: 0.2s; }
   #mhs-app-root .btn-red { background: #D21F28; color: white; }
+  #mhs-app-root .btn-red:hover { background: #a0181f; }
   #mhs-app-root .btn-outline { background: white; color: #D21F28; border: 2px solid #D21F28; }
   #mhs-app-root .btn-sm { padding: 4px 8px; font-size: 11px; border: 1px solid #ddd; background: white; border-radius: 3px; cursor: pointer; }
   #mhs-app-root .card { border: 1px solid #ddd; padding: 20px; border-radius: 8px; background: white; transition: 0.2s; margin-bottom:15px; }
@@ -24,71 +23,72 @@
   
   /* Grid & Columns */
   #mhs-app-root .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 15px; }
-  #mhs-app-root .shop-cols { display: flex; gap: 20px; flex-wrap: wrap; }
-  #mhs-app-root .col-left { flex: 0 0 320px; width: 100%; border: 1px solid #ddd; border-radius: 8px; }
-  #mhs-app-root .col-right { flex: 1; min-width: 300px; }
+  #mhs-app-root .shop-cols { display: flex; gap: 20px; align-items: flex-start; }
+  #mhs-app-root .col-left { flex: 0 0 320px; width: 100%; border: 1px solid #ddd; border-radius: 8px; background: #fff; }
+  #mhs-app-root .col-right { flex: 1; min-width: 0; }
   
   /* Slots */
-  #mhs-app-root .slot { display: flex; justify-content: space-between; padding: 8px; border-bottom: 1px solid #eee; font-size: 13px; align-items: center; }
+  #mhs-app-root .slot { border-bottom: 1px solid #eee; font-size: 13px; }
   #mhs-app-root .slot.fill { background: #f9fff9; border-left: 3px solid #28a745; }
-  #mhs-app-root .del { color: #c00; cursor: pointer; font-weight: bold; font-size: 16px; padding: 0 5px; }
+  #mhs-app-root .del { color: #c00; cursor: pointer; font-weight: bold; font-size: 16px; padding: 0 8px; }
   
   /* Forms */
-  #mhs-app-root select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; margin-bottom: 15px; }
+  #mhs-app-root select, #mhs-app-root input[type=text] { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; margin-bottom: 15px; box-sizing: border-box; }
+  #mhs-app-root label { font-weight: bold; font-size: 12px; display: block; margin-bottom: 4px; }
   #mhs-app-root .guide { background: #e3f2fd; color: #0d47a1; padding: 15px; border-radius: 4px; margin-bottom: 15px; border-left: 4px solid #2196F3; font-size: 14px; }
   #mhs-app-root .guide.warn { background: #fff3cd; color: #856404; border-color: #ffc107; }
 
-  /* Modal */
+  /* Modal Overlay */
   #mhs-app-root .modal-bg { display: none; position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:9999; justify-content:center; align-items:center; }
-  #mhs-app-root .modal { background: white; padding: 20px; border-radius: 8px; width: 400px; max-width: 90%; }
+  #mhs-app-root .modal { background: white; padding: 20px; border-radius: 8px; width: 400px; max-width: 90%; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
 
-@media print {
-  /* Hide everything */
-  body * { visibility: hidden; }
-  
-  /* Show only the receipt content */
-  #finishModal, #finishModal * { visibility: visible; }
-  
-  /* Position the modal nicely for paper */
-  #finishModal {
-    position: absolute;
-    left: 0;
-    top: 0;
-    background: white;
-    width: 100%;
-    height: auto;
-    z-index: 9999;
-  }
-  .modal { box-shadow: none; border: none; width: 100% !important; max-width: 100% !important; }
-  
-  /* Hide the modal buttons on print */
-  .modal button { display: none; }
-}
-
-/* --- MOBILE OPTIMIZATIONS --- */
+  /* --- MOBILE OPTIMIZATIONS --- */
   @media (max-width: 768px) {
-    /* 1. Force columns to stack vertically */
-    #mhs-app-root .shop-cols {
-      flex-direction: column;
-    }
-
-    /* 2. Make the Schedule (Left Col) full width */
-    #mhs-app-root .col-left {
-      flex: 1 1 100%;
-      width: 100%;
-      max-width: none;
-      margin-bottom: 20px;
-    }
-
-    /* 3. Adjust the Modal to fit small screens */
-    #mhs-app-root .modal {
-      width: 95% !important;
-      margin: 10px;
-      max-height: 90vh; /* Prevent it from being taller than screen */
-      overflow-y: auto; /* Allow scrolling inside modal */
-    }
+    #mhs-app-root .shop-cols { flex-direction: column; }
+    #mhs-app-root .col-left { flex: 1 1 100%; width: 100%; max-width: none; margin-bottom: 20px; }
+    #mhs-app-root .modal { width: 95% !important; margin: 10px; max-height: 90vh; overflow-y: auto; }
   }
   
+  /* --- PRINT FIX (COLLAPSE HEIGHT) --- */
+  @media print {
+    /* 1. Reset Body & Main Container */
+    body, html, #mhs-app-root { 
+      background: white; 
+      height: auto !important; 
+      min-height: 0 !important;
+      overflow: visible !important;
+    }
+    
+    /* 2. Hide specific heavy elements so they don't take up space */
+    .header, .view-section, #mhs-loader, #swapModal, #msgModal {
+      display: none !important;
+    }
+
+    /* 3. Ensure the receipt modal is visible and positioned at the top */
+    #finishModal { 
+      display: block !important; 
+      position: absolute !important; 
+      left: 0; 
+      top: 0; 
+      width: 100%; 
+      height: auto; 
+      z-index: 99999;
+      background: white;
+    }
+
+    /* 4. Style the modal content for print */
+    .modal {
+      box-shadow: none !important; 
+      border: none !important; 
+      width: 100% !important; 
+      max-width: 100% !important; 
+      padding: 0 !important;
+      margin: 0 !important;
+    }
+    
+    /* 5. Hide buttons inside the modal */
+    .modal button { display: none !important; }
+  }
 </style>
 
 <div id="mhs-app-root">
