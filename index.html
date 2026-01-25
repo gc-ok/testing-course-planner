@@ -1,0 +1,828 @@
+<style>
+  /* Scoped styles to prevent Finalsite conflicts */
+  #mhs-app-root { font-family: 'Roboto', sans-serif; background: #fff; color: #333; min-height: 800px; display: flex; flex-direction: column; position: relative; }
+  
+  /* Utils */
+  #mhs-app-root .hidden { display: none !important; }
+  #mhs-app-root .view-section { display: none; animation: mhsFadeIn 0.4s; }
+  #mhs-app-root .view-section.active { display: block; }
+  @keyframes mhsFadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+  
+  /* Layout */
+  #mhs-app-root .top-strip { background: #666; color: white; text-align: right; padding: 5px 20px; font-size: 12px; }
+  #mhs-app-root .header { padding: 15px 20px; border-bottom: 4px solid #D21F28; }
+  #mhs-app-root .title { color: #D21F28; font-size: 26px; font-weight: 700; }
+  #mhs-app-root .main { max-width: 1200px; margin: 0 auto; width: 100%; padding: 20px; flex: 1; }
+
+  /* Components */
+  #mhs-app-root .btn { padding: 12px 24px; font-weight: 700; border: none; border-radius: 4px; cursor: pointer; display:inline-block; margin:5px;}
+  #mhs-app-root .btn-red { background: #D21F28; color: white; }
+  #mhs-app-root .btn-outline { background: white; color: #D21F28; border: 2px solid #D21F28; }
+  #mhs-app-root .btn-sm { padding: 4px 8px; font-size: 11px; border: 1px solid #ddd; background: white; border-radius: 3px; cursor: pointer; }
+  #mhs-app-root .card { border: 1px solid #ddd; padding: 20px; border-radius: 8px; background: white; transition: 0.2s; margin-bottom:15px; }
+  #mhs-app-root .card:hover { border-color: #D21F28; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+  
+  /* Grid & Columns */
+  #mhs-app-root .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 15px; }
+  #mhs-app-root .shop-cols { display: flex; gap: 20px; flex-wrap: wrap; }
+  #mhs-app-root .col-left { flex: 0 0 320px; width: 100%; border: 1px solid #ddd; border-radius: 8px; }
+  #mhs-app-root .col-right { flex: 1; min-width: 300px; }
+  
+  /* Slots */
+  #mhs-app-root .slot { display: flex; justify-content: space-between; padding: 8px; border-bottom: 1px solid #eee; font-size: 13px; align-items: center; }
+  #mhs-app-root .slot.fill { background: #f9fff9; border-left: 3px solid #28a745; }
+  #mhs-app-root .del { color: #c00; cursor: pointer; font-weight: bold; font-size: 16px; padding: 0 5px; }
+  
+  /* Forms */
+  #mhs-app-root select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; margin-bottom: 15px; }
+  #mhs-app-root .guide { background: #e3f2fd; color: #0d47a1; padding: 15px; border-radius: 4px; margin-bottom: 15px; border-left: 4px solid #2196F3; font-size: 14px; }
+  #mhs-app-root .guide.warn { background: #fff3cd; color: #856404; border-color: #ffc107; }
+
+  /* Modal */
+  #mhs-app-root .modal-bg { display: none; position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:9999; justify-content:center; align-items:center; }
+  #mhs-app-root .modal { background: white; padding: 20px; border-radius: 8px; width: 400px; max-width: 90%; }
+
+@media print {
+  /* Hide everything */
+  body * { visibility: hidden; }
+  
+  /* Show only the receipt content */
+  #finishModal, #finishModal * { visibility: visible; }
+  
+  /* Position the modal nicely for paper */
+  #finishModal {
+    position: absolute;
+    left: 0;
+    top: 0;
+    background: white;
+    width: 100%;
+    height: auto;
+    z-index: 9999;
+  }
+  .modal { box-shadow: none; border: none; width: 100% !important; max-width: 100% !important; }
+  
+  /* Hide the modal buttons on print */
+  .modal button { display: none; }
+}
+
+</style>
+
+<div id="mhs-app-root">
+
+  <div id="mhs-loader" style="position:absolute; top:0; left:0; width:100%; height:100%; background:white; z-index:50; display:flex; justify-content:center; align-items:center; flex-direction:column;">
+    <h3 style="color:#D21F28">Loading Course Catalog...</h3>
+    <p style="color:#666; font-size:12px;">Connecting to database file...</p>
+  </div>
+
+  <div class="top-strip">District ▼ Schools ▼</div>
+  <div class="header">
+    <div class="title">Mustang High School</div>
+    <div style="font-size:13px; color:#666;">Course Pathway Planner</div>
+  </div>
+
+  <div class="main">
+
+    <div id="view-welcome" class="view-section">
+      <div class="card" style="text-align:center; padding:40px; border-top: 5px solid #D21F28;">
+        <h2 style="color:#D21F28; margin-bottom:15px;">Welcome, Bronco!</h2>
+        <p style="max-width:600px; margin:0 auto 30px auto; color:#555;">
+          Plan your 2025-2026 schedule here before entering it into PowerSchool.
+          <br><strong>Goal:</strong> Select 7 Classes and 2 Alternates.
+        </p>
+        <div style="display:flex; gap:15px; justify-content:center; flex-wrap:wrap;">
+          <button class="btn btn-red" id="btn-know-path">I Know My Pathway</button>
+          <button class="btn btn-outline" id="btn-explore-path">Explore Pathways</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="view-explore" class="view-section">
+      <button class="btn-sm" id="btn-back-explore">← Back</button>
+      <h2 style="color:#D21F28; text-align:center; margin:10px 0;">Career Pathways</h2>
+      <div id="cardGrid" class="grid"></div>
+    </div>
+
+    <div id="view-form" class="view-section">
+      <div style="max-width:500px; margin:30px auto;" class="card">
+        <h3 style="color:#D21F28; margin-bottom:15px;">Student Profile</h3>
+        
+        <div style="display:flex; gap:10px;">
+            <div style="flex:1;">
+                <label style="font-size:12px; font-weight:bold;">First Name</label>
+                <input type="text" id="inputFName" style="width:100%; padding:8px; margin-bottom:10px; border:1px solid #ccc; border-radius:4px;" placeholder="John">
+            </div>
+            <div style="flex:1;">
+                <label style="font-size:12px; font-weight:bold;">Last Name</label>
+                <input type="text" id="inputLName" style="width:100%; padding:8px; margin-bottom:10px; border:1px solid #ccc; border-radius:4px;" placeholder="Doe">
+            </div>
+        </div>
+
+        <label style="font-size:12px; font-weight:bold;">Student ID #</label>
+        <input type="text" id="inputID" style="width:100%; padding:8px; margin-bottom:15px; border:1px solid #ccc; border-radius:4px;" placeholder="12345">
+        <label style="font-size:12px; font-weight:bold;">Grade Level Next Year:</label>
+        <select id="gradeSelect">
+          <option value="" disabled selected>Select Grade</option>
+          <option value="9">Freshman (9th)</option>
+          <option value="10">Sophomore (10th)</option>
+          <option value="11">Junior (11th)</option>
+          <option value="12">Senior (12th)</option>
+        </select>
+        
+        <label style="font-size:12px; font-weight:bold;">Career Interest:</label>
+        <select id="categorySelect"><option value="">-- Select --</option></select>
+        
+        <label style="font-size:12px; font-weight:bold;">Pathway:</label>
+        <select id="pathwaySelect"><option value="">-- Select Category First --</option></select>
+        
+        <div style="font-size:11px; color:#666; margin-bottom:15px; line-height:1.4; background:#f9f9f9; padding:10px; border-left:3px solid #ccc;">
+        <strong>Privacy Notice:</strong> By proceeding, you acknowledge that your name, student ID, and course selections will be recorded by the Counseling Department for the purpose of schedule building.
+        </div>
+
+        <button id="startBtn" class="btn btn-red" style="width:100%" disabled>Start Building</button>
+      </div>
+    </div>
+
+    <div id="view-shopping" class="view-section">
+      <div class="shop-cols">
+        <div class="col-left">
+          <div style="background:#333; color:white; padding:15px; border-radius:8px 8px 0 0;">
+            <h4 id="studentHeader">My Schedule</h4>
+            <div style="font-size:11px; opacity:0.8;">Credits: <span id="slotCount">0</span>/7</div>
+          </div>
+          <div id="coreSlots"></div>
+          <div id="flexSlots"></div>
+          <div style="background:#f4f4f4; padding:10px; border-top:2px solid #ddd;">
+            <div style="font-size:10px; font-weight:bold; color:#666;">ALTERNATES (2 Required)</div>
+            <div id="altSlots"></div>
+          </div>
+          <div style="padding:15px;">
+            <button class="btn btn-red" style="width:100%" id="btn-finish">Review & Finish</button>
+          </div>
+        </div>
+
+        <div class="col-right">
+          <div style="margin-bottom:15px; display:flex; gap:10px; flex-wrap:wrap;">
+            <button class="btn-sm tab-cat" data-type="pathway">My Pathway</button>
+            <button class="btn-sm tab-cat" data-type="required">Required Electives</button>
+            <button class="btn-sm tab-cat" data-type="general">General Electives</button>
+          </div>
+          <div id="guidanceBox" class="guide">Loading...</div>
+          <div id="catalogList" class="grid" style="grid-template-columns:1fr;"></div>
+        </div>
+      </div>
+    </div>
+
+  </div> <div id="swapModal" class="modal-bg">
+    <div class="modal">
+      <h3>Swap Core Level</h3>
+      <p>Move: <span id="swapSourceLabel" style="color:#007bff; font-weight:bold;"></span></p>
+      <select id="swapTargetSelect"></select>
+      <div style="text-align:right; margin-top:15px;">
+        <button class="btn-sm" id="btn-cancel-swap">Cancel</button>
+        <button class="btn-sm" style="background:#007bff; color:white;" id="btn-confirm-swap">Confirm</button>
+      </div>
+    </div>
+  </div>
+
+<div id="finishModal" class="modal-bg" style="z-index: 10000;">
+  <div class="modal" style="width:600px; max-width:95%;">
+    
+    <div id="receipt-content">
+      <div style="text-align:center; border-bottom:2px solid #D21F28; padding-bottom:10px; margin-bottom:15px;">
+        <h2 style="color:#D21F28; margin:0;">Submission Complete</h2>
+        <p style="color:#28a745; font-weight:bold; font-size:14px; margin-top:5px;">✓ Data sent to Counseling Office</p>
+      </div>
+
+      <div style="background:#f8f9fa; padding:15px; border:1px solid #ddd; border-radius:4px; margin-bottom:15px;">
+        <h4 style="margin-top:0; border-bottom:1px solid #ccc; padding-bottom:5px;">Student Record</h4>
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; font-size:13px;">
+          <div><strong>Name:</strong> <span id="receipt-name"></span></div>
+          <div><strong>ID:</strong> <span id="receipt-id"></span></div>
+          <div><strong>Grade:</strong> <span id="receipt-grade"></span></div>
+          <div><strong>Pathway:</strong> <span id="receipt-path"></span></div>
+        </div>
+      </div>
+
+      <h4 style="font-size:14px; margin-bottom:5px;">Selected Courses</h4>
+      <div id="receipt-list" style="font-size:12px; line-height:1.6; border:1px solid #eee; padding:10px; margin-bottom:15px;">
+        </div>
+    </div>
+
+    <div style="background:#fff3cd; color:#856404; padding:10px; font-size:12px; margin-bottom:15px; border-left:4px solid #ffc107;">
+      <strong>⚠ IMPORTANT:</strong> Please save this for your records. You cannot log back in to view this later.
+    </div>
+
+    <div style="display:flex; justify-content:flex-end; gap:10px;">
+      <button class="btn-sm" onclick="document.getElementById('finishModal').style.display='none'">Close</button>
+      <button class="btn btn-red" onclick="printReceipt()">🖨 Print / Save as PDF</button>
+    </div>
+
+  </div>
+</div>
+
+</div>
+
+<script>
+(function() {
+  // ===============================================
+  //  CONFIG: PASTE YOUR UPLOADED FILE LINK BELOW
+  // ===============================================
+  
+  const DATA_FILE_URL = "https://www.mustangps.org/fs/resource-manager/view/5dcea316-db3c-429d-be03-d82b7a553b92"; 
+
+  // ===============================================
+
+  // Global State (Wrapped in IIFE to be safe)
+  let schoolData = {};
+  let userState = { grade: null, pathway: null, cart: { core: [], electives: [], alternates: [] } };
+  let pendingCourseSwap = { coreIndex: null, subIndex: null };
+  
+  // --- HARDCODED CURRICULUM DATA (FROM CODE.GS) ---
+  const ALLOWED_SWAPS = {
+    "9": {
+        "English": ["English I", "English I Accelerated"],
+        "History": ["Oklahoma History", "Oklahoma History Accelerated"],
+        "Science": ["Physical Science", "Biology Accelerated"],
+        "Math": ["Algebra I", "Algebra I Accelerated", "Geometry", "Geometry Accelerated"]
+    },
+    "10": {
+        "English": ["English II", "English II Accelerated"],
+        "History": ["World History", "AP World History"], 
+        "Science": ["Biology", "Biology Accelerated", "Chemistry", "Chemistry Accelerated", "Physics"],
+        "Math": ["Geometry", "Geometry Accelerated", "Algebra II", "Algebra II Accelerated", "STEM Algebra II Accelerated"]
+    },
+    "11": {
+        "English": ["English III", "AP English Language & Composition"],
+        "History": ["US History", "AP US History"],
+        "Math": ["Algebra II", "Algebra II Accelerated", "STEM Algebra II Accelerated", "Intermediate Algebra", "PreCalculus Accelerated", "Algebra III", "Business Math", "AP PreCalculus", "AP Calculus AB", "AP Calculus BC", "Sports Statistics and Probability", "AP Statistics"],
+        "Science": ["Physical Science", "Chemistry", "Chemistry Accelerated", "Chemistry II", "AP Chemistry", "Physics", "Physics Accelerated", "AP Physics I", "AP Physics II", "STEM Physics Accelerated", "Zoology", "Zoology II", "Forensic Science", "Anatomy & Physiology", "AP Biology", "Environmental Science and Natural Resources", "AP Environmental Science", "Earth and Space Science"]
+    },
+    "12": {
+        "English": ["English IV", "AP English Literature & Composition"],
+        "History": ["American Government", "AP US Government and Politics"],
+        "Math": ["Algebra II", "Algebra II Accelerated", "STEM Algebra II Accelerated", "Intermediate Algebra", "PreCalculus Accelerated", "Algebra III", "Business Math", "AP PreCalculus", "AP Calculus AB", "AP Calculus BC", "Sports Statistics and Probability", "AP Statistics"],
+        "Science": ["Physical Science", "Chemistry", "Chemistry Accelerated", "Chemistry II", "AP Chemistry", "Physics", "Physics Accelerated", "AP Physics I", "AP Physics II", "STEM Physics Accelerated", "Zoology", "Zoology II", "Forensic Science", "Anatomy & Physiology", "AP Biology", "Environmental Science and Natural Resources", "AP Environmental Science", "Earth and Space Science"]
+    }
+  };
+  
+  // ===============================================
+  //  CONFIG: GOOGLE FORM INTEGRATION
+  // ===============================================
+  
+  // 1. Create a Google Form with these Short Answer questions:
+  //    - First Name
+  //    - Last Name
+  //    - Student ID
+  //    - Schedule JSON (Make this a "Paragraph" question to hold the data)
+  
+  // 2. Get the URL that ends in /formResponse (Inspect your form to find this)
+  const GOOGLE_FORM_URL = "https://docs.google.com/forms/u/0/d/e/YOUR_FORM_ID_HERE/formResponse";
+
+  // 3. Get the "entry.xxxxxx" IDs for each question (See instructions below code)
+  const FORM_FIELDS = {
+      firstName: "entry.123456789",  // Replace with actual ID
+      lastName:  "entry.987654321",
+      studentId: "entry.111222333",
+      jsonData:  "entry.444555666"   // The paragraph question for the data blob
+  };
+
+
+  // Wait for HTML to exist before running
+  document.addEventListener("DOMContentLoaded", function() {
+      initApp();
+  });
+  
+  // Fallback if DOMContentLoaded already fired (common in CMS)
+  if (document.readyState === "complete" || document.readyState === "interactive") {
+      setTimeout(initApp, 100);
+  }
+
+  function initApp() {
+      // Safety check to ensure we are not in a broken frame
+      const root = document.getElementById('mhs-app-root');
+      if (!root) return; // Stop if HTML isn't there
+
+      // Bind initial buttons
+      document.getElementById('btn-know-path').onclick = function() { showView('view-form'); };
+      document.getElementById('btn-explore-path').onclick = function() { showView('view-explore'); };
+      document.getElementById('btn-back-explore').onclick = function() { showView('view-welcome'); };
+      
+      document.getElementById('categorySelect').onchange = filterPathways;
+      document.getElementById('pathwaySelect').onchange = checkReady;
+      document.getElementById('gradeSelect').onchange = checkReady;
+      document.getElementById('startBtn').onclick = initShopping;
+      
+      document.getElementById('btn-finish').onclick = finishSchedule;
+      document.getElementById('btn-close-finish').onclick = function() { closeModal('finishModal'); };
+      
+      document.getElementById('btn-cancel-swap').onclick = function() { closeModal('swapModal'); };
+      document.getElementById('btn-confirm-swap').onclick = confirmCourseSwap;
+      document.getElementById('inputFName').addEventListener('input', checkReady);
+      document.getElementById('inputLName').addEventListener('input', checkReady);
+      document.getElementById('inputID').addEventListener('input', checkReady);
+      
+      document.querySelectorAll('.tab-cat').forEach(btn => {
+          btn.onclick = function() { renderCatalog(this.dataset.type, this); };
+      });
+
+      // Load Data
+      if(DATA_FILE_URL.includes("REPLACE_THIS")) {
+        console.error("MHS App: URL not set.");
+        return;
+      }
+
+      fetch(DATA_FILE_URL)
+        .then(response => response.json())
+        .then(data => {
+          schoolData = data;
+          // Fix IDs
+          schoolData.catalog.forEach((c, i) => {
+             if(!c.id) c.id = "GEN_" + i;
+             if(!Array.isArray(c.pathway_tags)) c.pathway_tags = [];
+          });
+          
+          const loader = document.getElementById('mhs-loader');
+          if(loader) loader.classList.add('hidden');
+          
+          showView('view-welcome');
+          populateCategories();
+          renderCards();
+        })
+        .catch(err => {
+          console.error(err);
+          const loader = document.getElementById('mhs-loader');
+          if(loader) loader.innerHTML = `<h3 style='color:red'>Error Loading Data</h3><p>Check console or file URL.</p>`;
+        });
+  }
+
+  // --- NAV ---
+  function showView(id) {
+    const root = document.getElementById('mhs-app-root');
+    root.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+  }
+  function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+
+  // --- SETUP ---
+  function populateCategories() {
+    const sel = document.getElementById('categorySelect');
+    [...new Set(schoolData.pathways.map(p => p.category))].forEach(c => {
+      let opt = document.createElement('option'); opt.value = c; opt.text = c; sel.add(opt);
+    });
+  }
+  
+  function renderCards() {
+    const grid = document.getElementById('cardGrid'); 
+    grid.innerHTML = '';
+    schoolData.pathways.forEach(p => {
+      const card = document.createElement('div');
+      card.className = 'card';
+      card.innerHTML = `
+          <div style="font-size:10px; color:#888; text-transform:uppercase;">${p.category}</div>
+          <h4 style="margin:5px 0;">${p.name}</h4>
+          <p style="font-size:12px; color:#666;">${p.description||''}</p>
+          <button class="btn-sm" style="margin-top:10px; color:#D21F28; border-color:#D21F28">Select</button>
+      `;
+      // We attach event listener via JS to avoid scope issues in HTML string
+      card.querySelector('button').onclick = function() { selectPath(p.category, p.name); };
+      grid.appendChild(card);
+    });
+  }
+  
+  function selectPath(cat, name) {
+    document.getElementById('categorySelect').value = cat;
+    filterPathways();
+    document.getElementById('pathwaySelect').value = name;
+    checkReady();
+    showView('view-form');
+  }
+  
+  function filterPathways() {
+    const cat = document.getElementById('categorySelect').value;
+    const sel = document.getElementById('pathwaySelect');
+    sel.innerHTML = '<option value="">-- Select Path --</option>';
+    if(cat) schoolData.pathways.filter(p=>p.category===cat).forEach(p=>{
+       let opt=document.createElement('option'); opt.value=p.name; opt.text=p.name; sel.add(opt);
+    });
+  }
+  
+  function checkReady() {
+    const g = document.getElementById('gradeSelect').value;
+    const p = document.getElementById('pathwaySelect').value;
+    const fn = document.getElementById('inputFName').value;
+    const ln = document.getElementById('inputLName').value;
+    const id = document.getElementById('inputID').value;
+    
+    // Button is enabled only if ALL fields have values
+    document.getElementById('startBtn').disabled = !(g && p && fn && ln && id);
+  }
+  
+  // Add Event Listeners for the new inputs in initApp():
+  // document.getElementById('inputFName').addEventListener('input', checkReady);
+  // document.getElementById('inputLName').addEventListener('input', checkReady);
+  // document.getElementById('inputID').addEventListener('input', checkReady);
+  
+  
+  function sendToGoogleForm() {
+    // 1. Gather Data
+    const studentData = {
+        firstName: document.getElementById('inputFName').value,
+        lastName:  document.getElementById('inputLName').value,
+        studentId: document.getElementById('inputID').value,
+        grade:     userState.grade,
+        pathway:   userState.pathway,
+        courses:   userState.cart
+    };
+
+    // 2. Prepare Form Data
+    const formData = new FormData();
+    formData.append(FORM_FIELDS.firstName, studentData.firstName);
+    formData.append(FORM_FIELDS.lastName, studentData.lastName);
+    formData.append(FORM_FIELDS.studentId, studentData.studentId);
+    
+    // Convert the entire schedule object to a pretty JSON string
+    formData.append(FORM_FIELDS.jsonData, JSON.stringify(studentData, null, 2));
+
+    // 3. UI Feedback (Show a "Saving..." state)
+    const finishBtn = document.getElementById('btn-finish');
+    const originalText = finishBtn.innerText;
+    finishBtn.innerText = "Submitting...";
+    finishBtn.disabled = true;
+
+    // 4. Send (no-cors mode)
+    fetch(GOOGLE_FORM_URL, {
+        method: "POST",
+        mode: "no-cors",
+        body: formData
+    })
+    .then(() => {
+        // Since no-cors gives an opaque response, we assume success if fetch didn't throw error
+        console.log("Form Submitted");
+
+        populateReceipt();
+
+        document.getElementById('finishModal').style.display='flex';
+    })
+    .catch(err => {
+        console.error("Submission Error", err);
+        alert("There was an error saving your data. Please print this page.");
+        // Still show the modal so they can print
+        document.getElementById('finishModal').style.display='flex';
+    })
+    .finally(() => {
+        finishBtn.innerText = originalText;
+        finishBtn.disabled = false;
+    });
+  }
+
+  // --- SHOPPING ---
+  function initShopping() {
+    userState.grade = document.getElementById('gradeSelect').value;
+    userState.pathway = document.getElementById('pathwaySelect').value;
+    
+    // Use the robust loading logic from the new system
+    userState.cart.core = getDefaultCore(userState.grade);
+    
+    // Reset Electives/Alts
+    userState.cart.electives = [];
+    userState.cart.alternates = [];
+
+    document.getElementById('studentHeader').innerText = `Grade ${userState.grade} | ${userState.pathway}`;
+    renderCart();
+    
+    // Trigger the pathway tab click to refresh the catalog view
+    const pathBtn = document.querySelector('.tab-cat[data-type="pathway"]');
+    if(pathBtn) pathBtn.click();
+    
+    showView('view-shopping');
+  }
+
+  // Helper to find exact course or fallback
+  function findC(name) {
+      let match = schoolData.catalog.find(c => c.title.toLowerCase() === name.toLowerCase());
+      if(!match) match = schoolData.catalog.find(c => c.title.toLowerCase().startsWith(name.toLowerCase()));
+      
+      // Fallback dummy if JSON is out of date
+      if(!match) {
+          console.warn("Missing data for:", name);
+          return { id: "MISS_"+name.replace(/\s/g,''), title: name, credits: (name.includes("Essentials")||name.includes("Government")||name.includes("History")) ? 0.5 : 1.0, type: "Core" };
+      }
+      return match;
+  }
+
+  function getDefaultCore(grade) {
+    let cores = [];
+    if(grade === "9") {
+        cores.push(findC("English I"));
+        cores.push([ findC("Oklahoma History"), findC("Essentials I") ]); 
+        cores.push(findC("Physical Science"));
+        cores.push(findC("Algebra I"));
+    } else if(grade === "10") {
+        cores.push(findC("English II"));
+        cores.push([ findC("World History"), findC("Essentials II") ]);
+        cores.push(findC("Geometry"));
+        cores.push(findC("Biology"));
+    } else if(grade === "11") {
+        cores.push(findC("English III"));
+        cores.push(findC("US History")); 
+        cores.push(findC("Algebra II"));
+        cores.push(findC("Chemistry"));
+    } else {
+        // Senior Logic
+        cores.push(findC("English IV"));
+        // Create the dummy "Open" slot for 2nd semester gov
+        let openSlot = { id: "OPEN_ELEC_SR", title: "Open Elective", credits: 0.5, type: "Placeholder" };
+        cores.push([ findC("American Government"), openSlot ]);
+        cores.push(findC("Algebra II")); 
+    }
+    return cores;
+  }
+
+  function renderCart() {
+    let tot = 0;
+    userState.cart.core.forEach(i => Array.isArray(i) ? tot+=i[0].credits+i[1].credits : tot+=i.credits);
+    userState.cart.electives.forEach(c => tot+=c.credits);
+    document.getElementById('slotCount').innerText = tot;
+
+    // Core
+    const cDiv = document.getElementById('coreSlots'); cDiv.innerHTML='';
+    userState.cart.core.forEach((item, i) => {
+      const row = document.createElement('div');
+      if(Array.isArray(item)) {
+        row.innerHTML = `
+          <div class="slot fill" style="padding:0; border-left:3px solid #007bff; display:block;">
+            <div style="padding:5px 10px; font-size:10px; font-weight:bold; background:#f0f7ff;">CORE ${i+1} (Split)</div>
+            <div class="slot" style="border:none;"><span>${item[0].title}</span> <button class="btn-sm swap-btn-0">Swap</button></div>
+            <div class="slot" style="border:none; border-top:1px solid #eee;"><span>${item[1].title}</span> <button class="btn-sm swap-btn-1">Swap</button></div>
+          </div>`;
+          row.querySelector('.swap-btn-0').onclick = function() { swapHonors(i, 0); };
+          row.querySelector('.swap-btn-1').onclick = function() { swapHonors(i, 1); };
+      } else {
+        row.innerHTML = `<div class="slot fill"><span style="font-weight:bold; font-size:11px;">CORE ${i+1}</span> <span>${item.title}</span> <button class="btn-sm swap-btn">Swap</button></div>`;
+        row.querySelector('.swap-btn').onclick = function() { swapHonors(i, -1); };
+      }
+      cDiv.appendChild(row);
+    });
+
+    // Electives
+    const eDiv = document.getElementById('flexSlots'); eDiv.innerHTML='';
+    const processed = new Set();
+    let count=1;
+    userState.cart.electives.forEach((c, idx) => {
+      if(processed.has(idx)) return;
+      const row = document.createElement('div');
+      
+      if(c.credits >= 1) {
+        row.innerHTML = `<div class="slot fill"><span style="font-weight:bold; font-size:11px;">ELEC ${count}</span> <span>${c.title} (${c.credits})</span> <span class="del">&times;</span></div>`;
+        row.querySelector('.del').onclick = function() { remElec(idx); };
+        processed.add(idx);
+      } else {
+        let partner = -1;
+        for(let j=idx+1; j<userState.cart.electives.length; j++) if(!processed.has(j) && userState.cart.electives[j].credits===0.5) { partner=j; break; }
+        
+        let pHTML = partner!==-1 ? `<span>${userState.cart.electives[partner].title}</span> <span class="del del-p">&times;</span>` : `<span style="color:#ccc">-- Open --</span>`;
+        
+        row.innerHTML = `
+          <div class="slot fill" style="padding:0; display:block;">
+            <div style="padding:5px 10px; font-size:10px; font-weight:bold;">ELEC ${count} (Semesters)</div>
+            <div class="slot" style="border:none;"><span>${c.title}</span> <span class="del del-c">&times;</span></div>
+            <div class="slot" style="border:none; border-top:1px solid #eee;">${pHTML}</div>
+          </div>`;
+        
+        row.querySelector('.del-c').onclick = function() { remElec(idx); };
+        if(partner!==-1) row.querySelector('.del-p').onclick = function() { remElec(partner); };
+        
+        processed.add(idx); if(partner!==-1) processed.add(partner);
+      }
+      eDiv.appendChild(row);
+      count++;
+    });
+    
+    // Empty
+    for(let k=0; k<Math.floor(7-tot); k++) eDiv.innerHTML += `<div class="slot"><span style="color:#ccc;">-- Open Slot --</span></div>`;
+    
+    // Alts
+    const aDiv = document.getElementById('altSlots'); aDiv.innerHTML='';
+    userState.cart.alternates.forEach((c,i) => {
+        const d = document.createElement('div');
+        d.innerHTML = `<div class="slot fill"><span>${c.title}</span> <span class="del">&times;</span></div>`;
+        d.querySelector('.del').onclick = function() { remAlt(i); };
+        aDiv.appendChild(d);
+    });
+  }
+
+  function renderCatalog(type, btnEl) {
+    if(btnEl) {
+        document.querySelectorAll('.tab-cat').forEach(b => b.classList.remove('active'));
+        btnEl.classList.add('active');
+    }
+    const box = document.getElementById('guidanceBox');
+    const list = document.getElementById('catalogList'); list.innerHTML='';
+    let courses = [];
+    
+    if(type==='pathway') {
+       courses = schoolData.catalog.filter(c => c.pathway_tags.includes(userState.pathway));
+       const count = userState.cart.electives.filter(c=>c.pathway_tags.includes(userState.pathway)).length;
+       box.innerHTML = count===0 ? "<strong>Guidance:</strong> Please select 1-2 classes from your pathway." : "<strong>Good job!</strong> You have pathway classes selected.";
+       box.className = count===0 ? "guide warn" : "guide";
+    } else {
+       box.innerHTML = type==='required' ? "Required Electives (Arts, PE, Language)" : "General Electives";
+       box.className = "guide";
+       courses = schoolData.catalog.filter(c => c.type.includes(type==='required'?"Required":"General"));
+    }
+
+    courses.forEach(c => {
+      const isAdd = userState.cart.electives.concat(userState.cart.alternates).find(x=>x.id==c.id);
+      const div = document.createElement('div');
+      div.className = 'slot';
+      div.style.display = 'block';
+      div.style.padding = '10px';
+      
+      div.innerHTML = `
+          <div style="display:flex; justify-content:space-between;">
+            <strong style="color:#D21F28">${c.title}</strong>
+            ${isAdd ? '<span style="color:green; font-weight:bold;">ADDED</span>' : `<button class="btn-sm add-btn" style="background:#28a745; color:white; border:none;">+ ADD</button>`}
+          </div>
+          <div style="font-size:11px; color:#666; margin-top:4px;">${c.credits} Credit • ${c.grades.join(',')}th</div>
+          <div style="font-size:11px; color:#888; margin-top:4px;">${c.prerequisite ? 'Prereq: '+c.prerequisite : ''}</div>
+      `;
+      if(!isAdd) {
+          div.querySelector('.add-btn').onclick = function() { add(c.id); };
+      }
+      list.appendChild(div);
+    });
+  }
+  
+  function add(id) {
+    const c = schoolData.catalog.find(x => x.id == id);
+    if (!c) return;
+
+    // Helper to check for fees in description
+    const hasFee = (desc) => desc && (desc.includes("$") || /\bfee\b/i.test(desc));
+
+    // 1. Fee Check
+    if (hasFee(c.description)) {
+        if (!confirm(`FEE ALERT:\n${c.title} requires an additional fee.\n\nDo you accept this cost?`)) return;
+    }
+
+    // 2. Prereq Check
+    if (c.prerequisite && c.prerequisite.length > 2) {
+        if (!confirm(`PREREQUISITE CHECK:\nCourse: ${c.title}\nRequires: ${c.prerequisite}\n\nHave you met this?`)) return;
+    }
+
+    // 3. Logic to add (Credit counting)
+    // Note: We recalculate total credits every time to be safe
+    let total = 0;
+    userState.cart.core.forEach(item => {
+        if (Array.isArray(item)) total += item[0].credits + item[1].credits;
+        else total += item.credits;
+    });
+    userState.cart.electives.forEach(c => total += c.credits);
+
+    if (total + c.credits <= 7) {
+        userState.cart.electives.push(c);
+    } else if (userState.cart.alternates.length < 2) {
+        alert("Schedule full (7/7). Adding to ALTERNATES.");
+        userState.cart.alternates.push(c);
+    } else {
+        alert("Schedule and Alternates are full. Please remove a class first.");
+        return;
+    }
+    
+    renderCart(); 
+    
+    // Refresh catalog UI to show "ADDED" status
+    const activeBtn = document.querySelector('.tab-cat.active');
+    if(activeBtn) renderCatalog(activeBtn.dataset.type, activeBtn);
+  }
+
+  function remElec(i) { userState.cart.electives.splice(i,1); renderCart(); }
+  function remAlt(i) { userState.cart.alternates.splice(i,1); renderCart(); }
+  
+  function swapHonors(coreIndex, subIndex) {
+    pendingCourseSwap = { coreIndex: coreIndex, subIndex: subIndex };
+
+    // 1. Identify Subject based on current title
+    let currentTitle = "";
+    if(subIndex === -1) currentTitle = userState.cart.core[coreIndex].title;
+    else currentTitle = userState.cart.core[coreIndex][subIndex].title;
+    
+    let subject = "";
+    if (currentTitle.includes("English")) subject = "English";
+    else if (currentTitle.match(/(Math|Algebra|Geometry|Calculus|Statistics)/)) subject = "Math";
+    else if (currentTitle.match(/(Science|Biology|Chemistry|Physics|Zoology|Anatomy)/)) subject = "Science";
+    else if (currentTitle.match(/(History|Government)/)) subject = "History";
+
+    document.getElementById('swapSourceLabel').innerText = currentTitle;
+
+    // 2. Get Allowed List from Constant
+    const allowedNames = ALLOWED_SWAPS[userState.grade][subject];
+    const select = document.getElementById('swapTargetSelect');
+    select.innerHTML = '<option value="">-- Select New Course --</option>';
+
+    if (allowedNames) {
+        allowedNames.forEach(name => {
+            const realC = findC(name); // Use the helper from Update #2
+            if(realC) {
+                const opt = document.createElement('option');
+                opt.value = realC.id;
+                opt.text = `${realC.title} (${realC.credits})`;
+                select.appendChild(opt);
+            }
+        });
+    }
+    document.getElementById('swapModal').style.display = 'flex';
+  }
+
+  function confirmCourseSwap() {
+    const newId = document.getElementById('swapTargetSelect').value;
+    if(!newId) { closeModal('swapModal'); return; }
+
+    const newCourse = schoolData.catalog.find(c => String(c.id) === String(newId));
+    if(!newCourse) return;
+
+    const p = pendingCourseSwap; // Short alias
+
+    // LOGIC: AP World (Year) eats the whole slot (replaces array with object)
+    if(newCourse.title.includes("AP World History")) {
+        userState.cart.core[p.coreIndex] = newCourse;
+    }
+    // LOGIC: Swapping FROM AP World back to Standard (restores array)
+    else if(p.subIndex === -1 && userState.cart.core[p.coreIndex].title.includes("AP World History")) {
+         userState.cart.core[p.coreIndex] = [ newCourse, findC("Essentials II") ];
+    }
+    // LOGIC: Senior Gov
+    else if(newCourse.title.includes("AP US Government")) {
+        userState.cart.core[p.coreIndex] = newCourse;
+    }
+    else if(p.subIndex === -1 && userState.cart.core[p.coreIndex].title.includes("AP US Government")) {
+        userState.cart.core[p.coreIndex] = [ newCourse, { id: "OPEN_ELEC_SR", title: "Open Elective", credits: 0.5, type: "Placeholder" } ];
+    }
+    // STANDARD SWAP
+    else {
+        if(p.subIndex === -1) userState.cart.core[p.coreIndex] = newCourse;
+        else userState.cart.core[p.coreIndex][p.subIndex] = newCourse;
+    }
+
+    renderCart();
+    closeModal('swapModal');
+  }
+  
+  function populateReceipt() {
+    // 1. Fill Student Info
+    document.getElementById('receipt-name').innerText = 
+        document.getElementById('inputFName').value + " " + document.getElementById('inputLName').value;
+    document.getElementById('receipt-id').innerText = document.getElementById('inputID').value;
+    document.getElementById('receipt-grade').innerText = userState.grade;
+    document.getElementById('receipt-path').innerText = userState.pathway;
+
+    // 2. Build Course List HTML
+    let listHTML = '<ul style="margin:0; padding-left:20px;">';
+    
+    // Core
+    userState.cart.core.forEach((item, i) => {
+        if(Array.isArray(item)) {
+             listHTML += `<li><strong>Core:</strong> ${item[0].title} / ${item[1].title}</li>`;
+        } else {
+             listHTML += `<li><strong>Core:</strong> ${item.title}</li>`;
+        }
+    });
+
+    // Electives
+    userState.cart.electives.forEach(c => {
+        listHTML += `<li><strong>Elective:</strong> ${c.title}</li>`;
+    });
+
+    // Alternates
+    listHTML += '</ul><div style="margin-top:10px; font-style:italic; border-top:1px dashed #ccc; padding-top:5px;"><strong>Alternates:</strong></div><ul style="margin:0; padding-left:20px; color:#666;">';
+    userState.cart.alternates.forEach(c => {
+        listHTML += `<li>${c.title}</li>`;
+    });
+    listHTML += '</ul>';
+
+    document.getElementById('receipt-list').innerHTML = listHTML;
+  }
+  
+  // Print Helper
+  window.printReceipt = function() {
+      // Simple print triggers the browser print dialog
+      // Users can choose "Save as PDF" from there
+      window.print();
+  }
+
+  function finishSchedule() {
+    let tot=0; 
+    userState.cart.core.forEach(i=>tot+=Array.isArray(i)?2:1); 
+    userState.cart.electives.forEach(i=>tot+=i.credits);
+    
+    if(tot<7) return alert("You need 7 credits.");
+    if(userState.cart.alternates.length<2) return alert("Select 2 Alternates.");
+    
+    // NEW: Trigger the Google Form submission
+    sendToGoogleForm();
+  }
+
+})();
+</script>
+
+
