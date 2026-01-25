@@ -609,16 +609,19 @@
         aDiv.appendChild(d);
     });
   }
-
+  
   function renderCatalog(type, btnEl) {
     if(btnEl) {
         document.querySelectorAll('.tab-cat').forEach(b => b.classList.remove('active'));
         btnEl.classList.add('active');
     }
     const box = document.getElementById('guidanceBox');
-    const list = document.getElementById('catalogList'); list.innerHTML='';
+    const list = document.getElementById('catalogList'); 
+    list.innerHTML='';
+    
     let courses = [];
     
+    // Filter Logic
     if(type==='pathway') {
        courses = schoolData.catalog.filter(c => c.pathway_tags.includes(userState.pathway));
        const count = userState.cart.electives.filter(c=>c.pathway_tags.includes(userState.pathway)).length;
@@ -632,19 +635,50 @@
 
     courses.forEach(c => {
       const isAdd = userState.cart.electives.concat(userState.cart.alternates).find(x=>x.id==c.id);
+      
+      // --- FIX 1: Friendly Credit Labels ---
+      let creditLabel = "Year"; // Default
+      let labelColor = "#eee";
+      
+      if (c.credits === 0.5) {
+          creditLabel = "Semester";
+      } else if (c.credits === 0) {
+          creditLabel = "Non-Credit";
+          labelColor = "#fff3cd"; // Warning yellow for 0 credit
+      }
+
+      // --- FIX 2: Grade Date Bug ---
+      // Convert array to string, then check if it looks like a date/timestamp
+      let gradeDisplay = c.grades.join(',');
+      // Check for common timestamp artifacts
+      if (gradeDisplay.includes("00:00:00") || gradeDisplay.includes("Standard Time") || gradeDisplay.length > 20) {
+          gradeDisplay = "9-12"; // Fallback for corrupted date data
+      } else {
+          gradeDisplay += "th"; // Add "th" if it looks normal
+      }
+
       const div = document.createElement('div');
       div.className = 'slot';
       div.style.display = 'block';
       div.style.padding = '10px';
       
       div.innerHTML = `
-          <div style="display:flex; justify-content:space-between;">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
             <strong style="color:#D21F28">${c.title}</strong>
-            ${isAdd ? '<span style="color:green; font-weight:bold;">ADDED</span>' : `<button class="btn-sm add-btn" style="background:#28a745; color:white; border:none;">+ ADD</button>`}
+            ${isAdd ? '<span style="color:green; font-weight:bold; font-size:12px;">ADDED</span>' : 
+              `<button class="btn-sm add-btn" style="background:#28a745; color:white; border:none; padding:4px 8px;">+ ADD</button>`}
           </div>
-          <div style="font-size:11px; color:#666; margin-top:4px;">${c.credits} Credit • ${c.grades.join(',')}th</div>
-          <div style="font-size:11px; color:#888; margin-top:4px;">${c.prerequisite ? 'Prereq: '+c.prerequisite : ''}</div>
+          
+          <div style="font-size:11px; color:#666; margin-top:6px; display:flex; align-items:center; gap:5px;">
+             <span style="background:${labelColor}; padding:2px 6px; border-radius:4px; font-weight:bold;">${creditLabel} (${c.credits})</span>
+             <span>• Grades: ${gradeDisplay}</span>
+          </div>
+          
+          <div style="font-size:11px; color:#888; margin-top:4px; font-style:italic;">
+             ${c.prerequisite ? 'Prereq: '+c.prerequisite : ''}
+          </div>
       `;
+
       if(!isAdd) {
           div.querySelector('.add-btn').onclick = function() { add(c.id); };
       }
