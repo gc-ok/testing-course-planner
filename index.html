@@ -619,43 +619,55 @@
     const list = document.getElementById('catalogList'); 
     list.innerHTML='';
     
+    // 1. Get current student grade (as a string to match data)
+    const myGrade = String(userState.grade);
+
     let courses = [];
     
-    // Filter Logic
+    // 2. Filter Logic (Now includes Grade Check)
     if(type==='pathway') {
-       courses = schoolData.catalog.filter(c => c.pathway_tags.includes(userState.pathway));
+       courses = schoolData.catalog.filter(c => 
+           c.pathway_tags.includes(userState.pathway) && 
+           // Check if the course grades array contains the student's grade
+           c.grades.map(g => String(g).trim()).includes(myGrade)
+       );
+       
        const count = userState.cart.electives.filter(c=>c.pathway_tags.includes(userState.pathway)).length;
        box.innerHTML = count===0 ? "<strong>Guidance:</strong> Please select 1-2 classes from your pathway." : "<strong>Good job!</strong> You have pathway classes selected.";
        box.className = count===0 ? "guide warn" : "guide";
     } else {
        box.innerHTML = type==='required' ? "Required Electives (Arts, PE, Language)" : "General Electives";
        box.className = "guide";
-       courses = schoolData.catalog.filter(c => c.type.includes(type==='required'?"Required":"General"));
+       
+       courses = schoolData.catalog.filter(c => 
+           c.type.includes(type==='required'?"Required":"General") &&
+           // Check if the course grades array contains the student's grade
+           c.grades.map(g => String(g).trim()).includes(myGrade)
+       );
+    }
+
+    if(courses.length === 0) {
+        list.innerHTML = `<div style="padding:15px; color:#666; font-style:italic;">No courses available for Grade ${myGrade} in this category.</div>`;
+        return;
     }
 
     courses.forEach(c => {
       const isAdd = userState.cart.electives.concat(userState.cart.alternates).find(x=>x.id==c.id);
       
-      // --- FIX 1: Friendly Credit Labels ---
-      let creditLabel = "Year"; // Default
+      // Credit Label Logic
+      let creditLabel = "Year"; 
       let labelColor = "#eee";
       
       if (c.credits === 0.5) {
           creditLabel = "Semester";
       } else if (c.credits === 0) {
           creditLabel = "Non-Credit";
-          labelColor = "#fff3cd"; // Warning yellow for 0 credit
+          labelColor = "#fff3cd"; 
       }
 
-      // --- FIX 2: Grade Date Bug ---
-      // Convert array to string, then check if it looks like a date/timestamp
-      let gradeDisplay = c.grades.join(',');
-      // Check for common timestamp artifacts
-      if (gradeDisplay.includes("00:00:00") || gradeDisplay.includes("Standard Time") || gradeDisplay.length > 20) {
-          gradeDisplay = "9-12"; // Fallback for corrupted date data
-      } else {
-          gradeDisplay += "th"; // Add "th" if it looks normal
-      }
+      // Grade Display Logic (Comma separated specific years)
+      // This forces the array [9, 10, 11] to become "9, 10, 11"
+      let gradeDisplay = c.grades.join(', ');
 
       const div = document.createElement('div');
       div.className = 'slot';
