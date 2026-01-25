@@ -629,9 +629,11 @@
     const list = document.getElementById('catalogList'); 
     list.innerHTML='';
     
+    // 1. Get current student grade (as string)
     const myGrade = String(userState.grade);
     let courses = [];
     
+    // 2. Filter Logic (Includes Grade Check)
     if(type==='pathway') {
        courses = schoolData.catalog.filter(c => 
            c.pathway_tags.includes(userState.pathway) && 
@@ -675,23 +677,28 @@
       const div = document.createElement('div');
       div.className = 'slot';
       div.style.display = 'block';
-      div.style.padding = '10px';
+      div.style.padding = '15px'; // Increased padding slightly for better readability
       
       div.innerHTML = `
-          <div style="display:flex; justify-content:space-between; align-items:center;">
-            <strong style="color:#D21F28">${c.title}</strong>
-            ${isAdd ? '<span style="color:green; font-weight:bold; font-size:12px;">ADDED</span>' : 
-              `<button class="btn-sm add-btn" style="background:#28a745; color:white; border:none; padding:4px 8px;">+ ADD</button>`}
+          <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+            <div>
+                <strong style="color:#D21F28; font-size:15px;">${c.title}</strong>
+                <div style="font-size:11px; color:#666; margin-top:4px; display:flex; align-items:center; flex-wrap:wrap; gap:5px;">
+                    <span style="background:${labelColor}; padding:2px 6px; border-radius:4px; font-weight:bold;">${creditLabel} (${c.credits})</span>
+                    ${feeBadge}
+                    <span>• Grades: ${gradeDisplay}</span>
+                </div>
+            </div>
+            ${isAdd ? '<span style="color:green; font-weight:bold; font-size:12px; white-space:nowrap; margin-left:10px;">ADDED</span>' : 
+              `<button class="btn-sm add-btn" style="background:#28a745; color:white; border:none; padding:6px 12px; white-space:nowrap; margin-left:10px;">+ ADD</button>`}
           </div>
           
-          <div style="font-size:11px; color:#666; margin-top:6px; display:flex; align-items:center; flex-wrap:wrap; gap:5px;">
-             <span style="background:${labelColor}; padding:2px 6px; border-radius:4px; font-weight:bold;">${creditLabel} (${c.credits})</span>
-             ${feeBadge}
-             <span>• Grades: ${gradeDisplay}</span>
+          <div style="font-size:13px; color:#444; margin-top:8px; line-height:1.4;">
+             ${c.description || ''}
           </div>
           
-          <div style="font-size:11px; color:#888; margin-top:4px; font-style:italic;">
-             ${c.prerequisite ? 'Prereq: '+c.prerequisite : ''}
+          <div style="font-size:11px; color:#856404; margin-top:6px; font-style:italic;">
+             ${c.prerequisite ? '<strong>Prereq:</strong> '+c.prerequisite : ''}
           </div>
       `;
 
@@ -701,7 +708,6 @@
       list.appendChild(div);
     });
   }
-  
 
   function remElec(i) { userState.cart.electives.splice(i,1); renderCart(); }
   function remAlt(i) { userState.cart.alternates.splice(i,1); renderCart(); }
