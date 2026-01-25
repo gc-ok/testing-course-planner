@@ -74,7 +74,6 @@
     <p style="color:#666; font-size:12px;">Connecting to database file...</p>
   </div>
 
-  <div class="top-strip">District ▼ Schools ▼</div>
   <div class="header">
     <div class="title">Mustang High School</div>
     <div style="font-size:13px; color:#666;">Course Pathway Planner</div>
@@ -220,6 +219,17 @@
   </div>
 </div>
 
+<div id="msgModal" class="modal-bg" style="z-index: 11000;">
+  <div class="modal" style="width:400px; max-width:90%;">
+    <h3 id="msgTitle" style="color:#D21F28; margin-top:0;">Alert</h3>
+    <p id="msgBody" style="font-size:14px; color:#555; line-height:1.5;"></p>
+    <div style="text-align:right; margin-top:20px; display:flex; justify-content:flex-end; gap:10px;">
+      <button id="msgCancelBtn" class="btn-sm">Cancel</button>
+      <button id="msgOkBtn" class="btn btn-red" style="padding:6px 15px;">OK</button>
+    </div>
+  </div>
+</div>
+  
 </div>
 
 <script>
@@ -619,29 +629,22 @@
     const list = document.getElementById('catalogList'); 
     list.innerHTML='';
     
-    // 1. Get current student grade (as a string to match data)
     const myGrade = String(userState.grade);
-
     let courses = [];
     
-    // 2. Filter Logic (Now includes Grade Check)
     if(type==='pathway') {
        courses = schoolData.catalog.filter(c => 
            c.pathway_tags.includes(userState.pathway) && 
-           // Check if the course grades array contains the student's grade
            c.grades.map(g => String(g).trim()).includes(myGrade)
        );
-       
        const count = userState.cart.electives.filter(c=>c.pathway_tags.includes(userState.pathway)).length;
        box.innerHTML = count===0 ? "<strong>Guidance:</strong> Please select 1-2 classes from your pathway." : "<strong>Good job!</strong> You have pathway classes selected.";
        box.className = count===0 ? "guide warn" : "guide";
     } else {
        box.innerHTML = type==='required' ? "Required Electives (Arts, PE, Language)" : "General Electives";
        box.className = "guide";
-       
        courses = schoolData.catalog.filter(c => 
            c.type.includes(type==='required'?"Required":"General") &&
-           // Check if the course grades array contains the student's grade
            c.grades.map(g => String(g).trim()).includes(myGrade)
        );
     }
@@ -654,19 +657,19 @@
     courses.forEach(c => {
       const isAdd = userState.cart.electives.concat(userState.cart.alternates).find(x=>x.id==c.id);
       
-      // Credit Label Logic
+      // Credit Label
       let creditLabel = "Year"; 
       let labelColor = "#eee";
-      
-      if (c.credits === 0.5) {
-          creditLabel = "Semester";
-      } else if (c.credits === 0) {
-          creditLabel = "Non-Credit";
-          labelColor = "#fff3cd"; 
+      if (c.credits === 0.5) creditLabel = "Semester";
+      else if (c.credits === 0) { creditLabel = "Non-Credit"; labelColor = "#fff3cd"; }
+
+      // Fee Logic
+      let feeBadge = '';
+      if (c.description && (c.description.includes("$") || /\bfee\b/i.test(c.description))) {
+          feeBadge = `<span style="background:#d4edda; color:#155724; border:1px solid #c3e6cb; padding:2px 6px; border-radius:4px; font-weight:bold; margin-right:5px;">$ Fee</span>`;
       }
 
-      // Grade Display Logic (Comma separated specific years)
-      // This forces the array [9, 10, 11] to become "9, 10, 11"
+      // Grade Display
       let gradeDisplay = c.grades.join(', ');
 
       const div = document.createElement('div');
@@ -681,8 +684,9 @@
               `<button class="btn-sm add-btn" style="background:#28a745; color:white; border:none; padding:4px 8px;">+ ADD</button>`}
           </div>
           
-          <div style="font-size:11px; color:#666; margin-top:6px; display:flex; align-items:center; gap:5px;">
+          <div style="font-size:11px; color:#666; margin-top:6px; display:flex; align-items:center; flex-wrap:wrap; gap:5px;">
              <span style="background:${labelColor}; padding:2px 6px; border-radius:4px; font-weight:bold;">${creditLabel} (${c.credits})</span>
+             ${feeBadge}
              <span>• Grades: ${gradeDisplay}</span>
           </div>
           
@@ -698,48 +702,6 @@
     });
   }
   
-  function add(id) {
-    const c = schoolData.catalog.find(x => x.id == id);
-    if (!c) return;
-
-    // Helper to check for fees in description
-    const hasFee = (desc) => desc && (desc.includes("$") || /\bfee\b/i.test(desc));
-
-    // 1. Fee Check
-    if (hasFee(c.description)) {
-        if (!confirm(`FEE ALERT:\n${c.title} requires an additional fee.\n\nDo you accept this cost?`)) return;
-    }
-
-    // 2. Prereq Check
-    if (c.prerequisite && c.prerequisite.length > 2) {
-        if (!confirm(`PREREQUISITE CHECK:\nCourse: ${c.title}\nRequires: ${c.prerequisite}\n\nHave you met this?`)) return;
-    }
-
-    // 3. Logic to add (Credit counting)
-    // Note: We recalculate total credits every time to be safe
-    let total = 0;
-    userState.cart.core.forEach(item => {
-        if (Array.isArray(item)) total += item[0].credits + item[1].credits;
-        else total += item.credits;
-    });
-    userState.cart.electives.forEach(c => total += c.credits);
-
-    if (total + c.credits <= 7) {
-        userState.cart.electives.push(c);
-    } else if (userState.cart.alternates.length < 2) {
-        alert("Schedule full (7/7). Adding to ALTERNATES.");
-        userState.cart.alternates.push(c);
-    } else {
-        alert("Schedule and Alternates are full. Please remove a class first.");
-        return;
-    }
-    
-    renderCart(); 
-    
-    // Refresh catalog UI to show "ADDED" status
-    const activeBtn = document.querySelector('.tab-cat.active');
-    if(activeBtn) renderCatalog(activeBtn.dataset.type, activeBtn);
-  }
 
   function remElec(i) { userState.cart.electives.splice(i,1); renderCart(); }
   function remAlt(i) { userState.cart.alternates.splice(i,1); renderCart(); }
@@ -855,18 +817,105 @@
       window.print();
   }
 
+
+// --- NEW: Custom Modal Helper ---
+  function showModal(title, text, isConfirm, yesCallback) {
+      document.getElementById('msgTitle').innerText = title;
+      document.getElementById('msgBody').innerHTML = text.replace(/\n/g, '<br>');
+      
+      const okBtn = document.getElementById('msgOkBtn');
+      const cancelBtn = document.getElementById('msgCancelBtn');
+
+      // Reset Clones to remove old listeners
+      const newOk = okBtn.cloneNode(true);
+      const newCancel = cancelBtn.cloneNode(true);
+      okBtn.parentNode.replaceChild(newOk, okBtn);
+      cancelBtn.parentNode.replaceChild(newCancel, cancelBtn);
+
+      document.getElementById('msgModal').style.display = 'flex';
+
+      if (isConfirm) {
+          newCancel.style.display = 'inline-block';
+          newOk.innerText = "Yes, Proceed";
+          newCancel.onclick = function() { document.getElementById('msgModal').style.display = 'none'; };
+          newOk.onclick = function() { 
+              document.getElementById('msgModal').style.display = 'none'; 
+              if(yesCallback) yesCallback(); 
+          };
+      } else {
+          newCancel.style.display = 'none';
+          newOk.innerText = "OK";
+          newOk.onclick = function() { document.getElementById('msgModal').style.display = 'none'; };
+      }
+  }
+
+  // --- UPDATED: Add to Cart Logic (Async Chain) ---
+  function add(id) {
+    const c = schoolData.catalog.find(x => x.id == id);
+    if (!c) return;
+
+    // Helper: Check description for "$" or "fee"
+    const hasFee = (desc) => desc && (desc.includes("$") || /\bfee\b/i.test(desc));
+
+    // Step 3: actually add it
+    const performAdd = () => {
+        let total = 0;
+        userState.cart.core.forEach(item => {
+            if (Array.isArray(item)) total += item[0].credits + item[1].credits;
+            else total += item.credits;
+        });
+        userState.cart.electives.forEach(c => total += c.credits);
+
+        if (total + c.credits <= 7) {
+            userState.cart.electives.push(c);
+        } else if (userState.cart.alternates.length < 2) {
+            showModal("Schedule Full", "Your 7 credits are full.<br>Adding this as an <strong>Alternate</strong>.", false);
+            userState.cart.alternates.push(c);
+        } else {
+            showModal("Cart Full", "You have 7 Credits and 2 Alternates.<br>Please remove something first.", false);
+            return;
+        }
+        
+        renderCart(); 
+        const activeBtn = document.querySelector('.tab-cat.active');
+        if(activeBtn) renderCatalog(activeBtn.dataset.type, activeBtn);
+    };
+
+    // Step 2: Check Prereq
+    const checkPrereq = () => {
+        if (c.prerequisite && c.prerequisite.length > 2) {
+            showModal("Prerequisite Check", `<strong>Course:</strong> ${c.title}<br><strong>Requires:</strong> ${c.prerequisite}<br><br>Have you met this requirement?`, true, performAdd);
+        } else {
+            performAdd();
+        }
+    };
+
+    // Step 1: Check Fee
+    if (hasFee(c.description)) {
+        showModal("Course Fee Alert", `<strong>${c.title}</strong> requires an additional fee.<br>See description for details.<br><br>Do you accept this cost?`, true, checkPrereq);
+    } else {
+        checkPrereq();
+    }
+  }
+
+  // --- UPDATED: Finish Schedule (No more Alert) ---
   function finishSchedule() {
     let tot=0; 
     userState.cart.core.forEach(i=>tot+=Array.isArray(i)?2:1); 
     userState.cart.electives.forEach(i=>tot+=i.credits);
     
-    if(tot<7) return alert("You need 7 credits.");
-    if(userState.cart.alternates.length<2) return alert("Select 2 Alternates.");
+    if(tot < 7) {
+        showModal("Incomplete Schedule", `You have selected <strong>${tot}/7</strong> credits.<br>You must fill your schedule.`, false);
+        return;
+    }
+    if(userState.cart.alternates.length < 2) {
+        showModal("Incomplete Alternates", "Please select at least 2 alternates.", false);
+        return;
+    }
     
-    // NEW: Trigger the Google Form submission
     sendToGoogleForm();
   }
-
+  
 })();
 </script>
 
