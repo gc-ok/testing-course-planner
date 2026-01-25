@@ -65,6 +65,30 @@
   .modal button { display: none; }
 }
 
+/* --- MOBILE OPTIMIZATIONS --- */
+  @media (max-width: 768px) {
+    /* 1. Force columns to stack vertically */
+    #mhs-app-root .shop-cols {
+      flex-direction: column;
+    }
+
+    /* 2. Make the Schedule (Left Col) full width */
+    #mhs-app-root .col-left {
+      flex: 1 1 100%;
+      width: 100%;
+      max-width: none;
+      margin-bottom: 20px;
+    }
+
+    /* 3. Adjust the Modal to fit small screens */
+    #mhs-app-root .modal {
+      width: 95% !important;
+      margin: 10px;
+      max-height: 90vh; /* Prevent it from being taller than screen */
+      overflow-y: auto; /* Allow scrolling inside modal */
+    }
+  }
+  
 </style>
 
 <div id="mhs-app-root">
