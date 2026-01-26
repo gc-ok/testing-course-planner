@@ -423,20 +423,28 @@
       let opt = document.createElement('option'); opt.value = c; opt.text = c; sel.add(opt);
     });
   }
-  
+
   function renderCards() {
     const grid = document.getElementById('cardGrid'); 
     grid.innerHTML = '';
+    
     schoolData.pathways.forEach(p => {
-      const card = document.createElement('div');
+      const card = document.createElement('div'); 
       card.className = 'card';
+      
+      // FIX: Convert \n (text newlines) to <br> (HTML line breaks)
+      // We also handle the case where description might be missing/undefined
+      const descHtml = p.description ? p.description.replace(/\n/g, '<br>') : '';
+
       card.innerHTML = `
-          <div style="font-size:10px; color:#888; text-transform:uppercase;">${p.category}</div>
-          <h4 style="margin:5px 0;">${p.name}</h4>
-          <p style="font-size:12px; color:#666;">${p.description||''}</p>
-          <button class="btn-sm" style="margin-top:10px; color:#D21F28; border-color:#D21F28">Select</button>
+        <div style="font-size:10px; color:#888; text-transform:uppercase; font-weight:bold;">${p.category}</div>
+        <h4 style="margin:10px 0; color:#333;">${p.name}</h4>
+        
+        <p style="font-size:12px; color:#666; line-height:1.5;">${descHtml}</p>
+        
+        <button class="btn-sm" style="margin-top:15px; color:#D21F28; border-color:#D21F28">Select Pathway</button>
       `;
-      // We attach event listener via JS to avoid scope issues in HTML string
+      
       card.querySelector('button').onclick = function() { selectPath(p.category, p.name); };
       grid.appendChild(card);
     });
