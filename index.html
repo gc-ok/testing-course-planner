@@ -303,7 +303,7 @@
       </div>
     </div>
     <div id="view-shopping" class="view-section">
-    <button class="btn-sm" onclick="showView('view-form')" style="margin-bottom:10px;">← Back to Profile</button>
+    <button class="btn-sm" id="btn-back-profile" style="margin-bottom:10px;">← Back to Profile</button>
 
     <div class="shop-cols">
       
@@ -518,6 +518,7 @@
       
       // FIX: Bind the new ID here instead of inline HTML
       document.getElementById('btn-back-home').onclick = function() { showView('view-welcome'); }; 
+      document.getElementById('btn-back-profile').onclick = function() { showView('view-form'); };
       
       // 2. Form Inputs (We removed the 'checkReady' listeners)
       document.getElementById('inputID').addEventListener('input', function(e) {
@@ -779,16 +780,27 @@
     if(!grade) missing.push("Grade Level");
     if(!pathway) missing.push("Pathway");
 
-    // 3. If missing items, SHOW MODAL and STOP
     if(missing.length > 0) {
         let msg = "Please complete the following fields:<br><ul style='text-align:left; margin-top:10px;'>";
         missing.forEach(m => msg += `<li>${m}</li>`);
         msg += "</ul>";
-        showModal("Missing Information", msg, false); // False = No Cancel button, just OK
-        return; // STOP HERE
+        showModal("Missing Information", msg, false);
+        return; 
     }
 
-    // 4. Success - Proceed to Shopping
+    // --- NEW: SENIOR CHECK LOGIC ---
+    const seniorAlert = document.getElementById('senior-alert');
+    // Ensure the element exists before trying to style it
+    if (seniorAlert) {
+        if (grade === '12') {
+            seniorAlert.style.display = 'block'; // Show it
+        } else {
+            seniorAlert.style.display = 'none';  // Hide it
+        }
+    }
+    // --------------------------------
+
+    // 3. Success - Proceed to Shopping
     userState.grade = grade;
     userState.pathway = pathway;
     userState.cart.core = getDefaultCore(userState.grade);
