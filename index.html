@@ -132,6 +132,65 @@
       display: inline-block;
       margin-bottom: 15px;
   }
+
+  /* --- CLEANER CART STYLES --- */
+  .cart-item {
+      padding: 12px 15px; /* More breathing room */
+      border-bottom: 1px solid #eee;
+      display: flex;
+      justify-content: space-between; /* Push button to the right */
+      align-items: center; /* Vertically center everything */
+      background: white;
+      transition: background 0.2s;
+  }
+  .cart-item:hover {
+      background: #fafafa;
+  }
+  .cart-item:last-child {
+      border-bottom: none;
+  }
+  
+  /* The small label (e.g. "CORE 1") */
+  .cart-label {
+      display: block;
+      font-size: 10px;
+      color: #999;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 2px;
+  }
+  
+  /* The Course Title */
+  .cart-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: #333;
+      line-height: 1.2;
+  }
+  
+  /* Split Core Header */
+  .split-header {
+      background: #e3f2fd;
+      color: #1565c0;
+      font-size: 10px;
+      font-weight: bold;
+      padding: 6px 15px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      border-top: 1px solid #eee;
+  }
+
+  /* Empty Slot Styling */
+  .slot-empty {
+      padding: 15px;
+      color: #aaa;
+      font-size: 13px;
+      font-style: italic;
+      background-image: linear-gradient(45deg, #fdfdfd 25%, #f4f4f4 25%, #f4f4f4 50%, #fdfdfd 50%, #fdfdfd 75%, #f4f4f4 75%, #f4f4f4 100%);
+      background-size: 20px 20px;
+      border-bottom: 1px solid #eee;
+  }
 </style>
 
 <div id="mhs-app-root">
@@ -746,73 +805,135 @@
   }
 
   function renderCart() {
+    // 1. Calculate Total Credits
     let tot = 0;
     userState.cart.core.forEach(i => Array.isArray(i) ? tot+=i[0].credits+i[1].credits : tot+=i.credits);
     userState.cart.electives.forEach(c => tot+=c.credits);
     document.getElementById('slotCount').innerText = tot;
 
-    // Core
-    const cDiv = document.getElementById('coreSlots'); cDiv.innerHTML='';
+    // 2. Render CORE Slots
+    const cDiv = document.getElementById('coreSlots'); 
+    cDiv.innerHTML='';
+    
     userState.cart.core.forEach((item, i) => {
       const row = document.createElement('div');
+      
       if(Array.isArray(item)) {
+        // --- SPLIT CORE (e.g. History + Essentials) ---
         row.innerHTML = `
-          <div class="slot fill" style="padding:0; border-left:3px solid #007bff; display:block;">
-            <div style="padding:5px 10px; font-size:10px; font-weight:bold; background:#f0f7ff;">CORE ${i+1} (Split)</div>
-            <div class="slot" style="border:none;"><span>${item[0].title}</span> <button class="btn-sm swap-btn-0">Swap</button></div>
-            <div class="slot" style="border:none; border-top:1px solid #eee;"><span>${item[1].title}</span> <button class="btn-sm swap-btn-1">Swap</button></div>
-          </div>`;
-          row.querySelector('.swap-btn-0').onclick = function() { swapHonors(i, 0); };
-          row.querySelector('.swap-btn-1').onclick = function() { swapHonors(i, 1); };
+            <div style="border-left: 4px solid #2196F3; background:white; border-bottom:1px solid #ddd;">
+                <div class="split-header">Core ${i+1} (Semester Split)</div>
+                
+                <div class="cart-item">
+                    <div>
+                        <span class="cart-title">${item[0].title}</span>
+                    </div>
+                    <button class="btn-sm swap-btn-0">Swap</button>
+                </div>
+                
+                <div class="cart-item" style="border-top:1px dashed #eee;">
+                    <div>
+                        <span class="cart-title">${item[1].title}</span>
+                        <div style="font-size:10px; color:#888;">${item[1].credits} Credits</div>
+                    </div>
+                    ${item[1].type==='Placeholder' ? '' : '<button class="btn-sm swap-btn-1">Swap</button>'}
+                </div>
+            </div>`;
+            
+        row.querySelector('.swap-btn-0').onclick = function() { swapHonors(i, 0); };
+        if(row.querySelector('.swap-btn-1')) row.querySelector('.swap-btn-1').onclick = function() { swapHonors(i, 1); };
+
       } else {
-        row.innerHTML = `<div class="slot fill"><span style="font-weight:bold; font-size:11px;">CORE ${i+1}</span> <span>${item.title}</span> <button class="btn-sm swap-btn">Swap</button></div>`;
+        // --- STANDARD CORE ---
+        row.innerHTML = `
+            <div class="cart-item" style="border-left: 4px solid #4CAF50;">
+                <div>
+                    <span class="cart-label">Core ${i+1}</span>
+                    <span class="cart-title">${item.title}</span>
+                </div>
+                <button class="btn-sm swap-btn">Swap</button>
+            </div>`;
         row.querySelector('.swap-btn').onclick = function() { swapHonors(i, -1); };
       }
       cDiv.appendChild(row);
     });
 
-    // Electives
-    const eDiv = document.getElementById('flexSlots'); eDiv.innerHTML='';
+    // 3. Render ELECTIVE Slots
+    const eDiv = document.getElementById('flexSlots'); 
+    eDiv.innerHTML='';
     const processed = new Set();
     let count=1;
+
     userState.cart.electives.forEach((c, idx) => {
       if(processed.has(idx)) return;
       const row = document.createElement('div');
       
       if(c.credits >= 1) {
-        row.innerHTML = `<div class="slot fill"><span style="font-weight:bold; font-size:11px;">ELEC ${count}</span> <span>${c.title} (${c.credits})</span> <span class="del">&times;</span></div>`;
+        // --- FULL YEAR ELECTIVE ---
+        row.innerHTML = `
+            <div class="cart-item" style="border-left: 4px solid #FF9800;">
+                <div>
+                    <span class="cart-label">Elective ${count}</span>
+                    <span class="cart-title">${c.title}</span>
+                </div>
+                <span class="del" title="Remove">&times;</span>
+            </div>`;
         row.querySelector('.del').onclick = function() { remElec(idx); };
         processed.add(idx);
       } else {
+        // --- SEMESTER PAIRS ---
         let partner = -1;
-        for(let j=idx+1; j<userState.cart.electives.length; j++) if(!processed.has(j) && userState.cart.electives[j].credits===0.5) { partner=j; break; }
-        
-        let pHTML = partner!==-1 ? `<span>${userState.cart.electives[partner].title}</span> <span class="del del-p">&times;</span>` : `<span style="color:#ccc">-- Open --</span>`;
-        
+        // Find next available semester course to pair
+        for(let j=idx+1; j<userState.cart.electives.length; j++) {
+            if(!processed.has(j) && userState.cart.electives[j].credits===0.5) { partner=j; break; }
+        }
+
+        const p1Title = c.title;
+        const p2Title = partner!==-1 ? userState.cart.electives[partner].title : "<span style='color:#ccc; font-style:italic;'>-- Select Semester 2 --</span>";
+
         row.innerHTML = `
-          <div class="slot fill" style="padding:0; display:block;">
-            <div style="padding:5px 10px; font-size:10px; font-weight:bold;">ELEC ${count} (Semesters)</div>
-            <div class="slot" style="border:none;"><span>${c.title}</span> <span class="del del-c">&times;</span></div>
-            <div class="slot" style="border:none; border-top:1px solid #eee;">${pHTML}</div>
-          </div>`;
-        
+            <div style="border-left: 4px solid #FF9800; background:white; border-bottom:1px solid #ddd;">
+                <div class="split-header" style="background:#fff3e0; color:#e65100;">Elective ${count} (Semesters)</div>
+                
+                <div class="cart-item">
+                    <span class="cart-title">${p1Title}</span>
+                    <span class="del del-c">&times;</span>
+                </div>
+                
+                <div class="cart-item" style="border-top:1px dashed #eee;">
+                    <span class="cart-title">${p2Title}</span>
+                    ${partner!==-1 ? '<span class="del del-p">&times;</span>' : ''}
+                </div>
+            </div>`;
+            
         row.querySelector('.del-c').onclick = function() { remElec(idx); };
         if(partner!==-1) row.querySelector('.del-p').onclick = function() { remElec(partner); };
         
-        processed.add(idx); if(partner!==-1) processed.add(partner);
+        processed.add(idx); 
+        if(partner!==-1) processed.add(partner);
       }
       eDiv.appendChild(row);
       count++;
     });
     
-    // Empty
-    for(let k=0; k<Math.floor(7-tot); k++) eDiv.innerHTML += `<div class="slot"><span style="color:#ccc;">-- Open Slot --</span></div>`;
+    // 4. Render EMPTY Slots
+    for(let k=0; k<Math.floor(7-tot); k++) {
+        eDiv.innerHTML += `<div class="slot-empty">-- Open Slot --</div>`;
+    }
     
-    // Alts
-    const aDiv = document.getElementById('altSlots'); aDiv.innerHTML='';
+    // 5. Render ALTERNATES
+    const aDiv = document.getElementById('altSlots'); 
+    aDiv.innerHTML='';
     userState.cart.alternates.forEach((c,i) => {
         const d = document.createElement('div');
-        d.innerHTML = `<div class="slot fill"><span>${c.title}</span> <span class="del">&times;</span></div>`;
+        d.innerHTML = `
+            <div class="cart-item" style="background:#fff;">
+                <div>
+                    <span class="cart-label" style="color:#666;">Alternate ${i+1}</span>
+                    <span class="cart-title" style="font-size:13px;">${c.title}</span>
+                </div>
+                <span class="del">&times;</span>
+            </div>`;
         d.querySelector('.del').onclick = function() { remAlt(i); };
         aDiv.appendChild(d);
     });
