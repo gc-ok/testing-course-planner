@@ -424,18 +424,18 @@
     });
   }
 
-  // --- HELPER: Formats text with Line Breaks AND Clickable Links ---
+  // --- HELPER: Formats text with Line Breaks AND 'More Info' Links ---
   function formatDescription(text) {
       if (!text) return '';
       
       // 1. Replace newlines with <br>
       let formatted = text.replace(/\n/g, '<br>');
 
-      // 2. Auto-link URLs (looks for http:// or https://)
-      // The regex captures the URL and wraps it in an anchor tag
+      // 2. Auto-link URLs -> Display "More Info"
+      // We keep '$1' in the href (the destination), but change the display text
       formatted = formatted.replace(
           /(https?:\/\/[^\s]+)/g, 
-          '<a href="$1" target="_blank" style="color:#D21F28; text-decoration:underline;">$1</a>'
+          '<a href="$1" target="_blank" style="color:#D21F28; text-decoration:underline; font-weight:bold;">More Info</a>'
       );
       
       return formatted;
