@@ -169,26 +169,26 @@
     </div>
 
     <div id="view-form" class="view-section">
-      <button class="btn-sm" onclick="showView('view-welcome')" style="margin-bottom:15px;">← Back to Home</button>
+      <button class="btn-sm" id="btn-back-home" style="margin-bottom:15px;">← Back to Home</button>
       
       <div style="max-width:500px; margin:0 auto;" class="card">
         <h3 style="color:#D21F28; margin-bottom:15px; margin-top:0;">Student Profile</h3>
         
         <div style="display:flex; gap:10px;">
           <div style="flex:1;">
-              <label>First Name</label>
+              <label>First Name <span style="color:red">*</span></label>
               <input type="text" id="inputFName" placeholder="John">
           </div>
           <div style="flex:1;">
-              <label>Last Name</label>
+              <label>Last Name <span style="color:red">*</span></label>
               <input type="text" id="inputLName" placeholder="Doe">
           </div>
         </div>
+
+        <label>Student ID # <span style="color:red">*</span></label>
+        <input type="text" id="inputID" placeholder="12345" inputmode="numeric">
   
-        <label>Student ID #</label>
-        <input type="text" id="inputID" placeholder="12345">
-  
-        <label>Grade Level Next Year:</label>
+        <label>Grade Level Next Year: <span style="color:red">*</span></label>
         <select id="gradeSelect">
           <option value="" disabled selected>Select Grade</option>
           <option value="9">Freshman (9th)</option>
@@ -197,14 +197,14 @@
           <option value="12">Senior (12th)</option>
         </select>
         
-        <label>My Pathway:</label>
+        <label>My Pathway: <span style="color:red">*</span></label>
         <select id="pathwaySelect"><option value="">-- Select Pathway --</option></select>
         
         <div style="font-size:11px; color:#666; margin:15px 0; background:#f9f9f9; padding:10px; border-left:3px solid #ccc;">
           <strong>Privacy Notice:</strong> Your selections are recorded for schedule building.
         </div>
   
-        <button id="startBtn" class="btn btn-red" style="width:100%" disabled>Start Building</button>
+        <button id="startBtn" class="btn btn-red" style="width:100%">Start Building</button>
       </div>
     </div>
   
@@ -410,25 +410,24 @@
       const root = document.getElementById('mhs-app-root');
       if (!root) return;
 
-      // 1. Navigation Buttons
+      // 1. Navigation Buttons (Now includes the Back Button fix)
       document.getElementById('btn-know-path').onclick = function() { showView('view-form'); };
       document.getElementById('btn-explore-path').onclick = function() { showView('view-explore'); };
       document.getElementById('btn-back-explore').onclick = function() { showView('view-welcome'); };
       
-      // 2. Form & Inputs
-      // REMOVED: categorySelect listener
-      document.getElementById('pathwaySelect').onchange = checkReady;
-      document.getElementById('gradeSelect').onchange = checkReady;
-      document.getElementById('inputFName').addEventListener('input', checkReady);
-      document.getElementById('inputLName').addEventListener('input', checkReady);
-      document.getElementById('inputID').addEventListener('input', checkReady);
-
+      // FIX: Bind the new ID here instead of inline HTML
+      document.getElementById('btn-back-home').onclick = function() { showView('view-welcome'); }; 
+      
+      // 2. Form Inputs (We removed the 'checkReady' listeners)
+      document.getElementById('inputID').addEventListener('input', function(e) {
+          // This Regex replaces anything that isn't a digit (\D) with nothing
+          this.value = this.value.replace(/\D/g, '');
+      });
       // 3. Action Buttons
-      document.getElementById('startBtn').onclick = initShopping;
+      document.getElementById('startBtn').onclick = initShopping; // This now handles validation
       document.getElementById('btn-finish').onclick = finishSchedule;
       
       // 4. Modal Buttons
-      // Changed closeModal() to direct style manipulation to be safe
       document.getElementById('btn-cancel-swap').onclick = function() { document.getElementById('swapModal').style.display = 'none'; };
       document.getElementById('btn-confirm-swap').onclick = confirmCourseSwap;
       
@@ -448,29 +447,18 @@
         .then(r => r.json())
         .then(data => {
           schoolData = data;
-          
-          // Data Cleanup
           schoolData.catalog.forEach((c, i) => {
              if(!c.id) c.id = "GEN_" + i;
              if(!Array.isArray(c.pathway_tags)) c.pathway_tags = [];
           });
-          
           document.getElementById('mhs-loader').classList.add('hidden');
           showView('view-welcome');
           
-          // --- NEW LOGIC: Populate the dropdown immediately ---
-          // Since we removed categories, we must list ALL pathways here.
           const sel = document.getElementById('pathwaySelect');
           sel.innerHTML = '<option value="">-- Select Pathway --</option>';
-          
-          // Sort them alphabetically so the list is easy to scan
           const sortedPaths = schoolData.pathways.sort((a,b) => a.name.localeCompare(b.name));
-          
           sortedPaths.forEach(p => {
-             let opt = document.createElement('option'); 
-             opt.value = p.name; 
-             opt.text = p.name; 
-             sel.add(opt);
+             let opt = document.createElement('option'); opt.value = p.name; opt.text = p.name; sel.add(opt);
           });
           
           renderCards();
@@ -675,20 +663,41 @@
 
   // --- SHOPPING ---
   function initShopping() {
-    userState.grade = document.getElementById('gradeSelect').value;
-    userState.pathway = document.getElementById('pathwaySelect').value;
-    
-    // Use the robust loading logic from the new system
+    // 1. Capture Values
+    const grade = document.getElementById('gradeSelect').value;
+    const pathway = document.getElementById('pathwaySelect').value;
+    const fname = document.getElementById('inputFName').value.trim();
+    const lname = document.getElementById('inputLName').value.trim();
+    const sid = document.getElementById('inputID').value.trim();
+
+    // 2. Validation Check
+    let missing = [];
+    if(!fname) missing.push("First Name");
+    if(!lname) missing.push("Last Name");
+    if(!sid) missing.push("Student ID");
+    if(!grade) missing.push("Grade Level");
+    if(!pathway) missing.push("Pathway");
+
+    // 3. If missing items, SHOW MODAL and STOP
+    if(missing.length > 0) {
+        let msg = "Please complete the following fields:<br><ul style='text-align:left; margin-top:10px;'>";
+        missing.forEach(m => msg += `<li>${m}</li>`);
+        msg += "</ul>";
+        showModal("Missing Information", msg, false); // False = No Cancel button, just OK
+        return; // STOP HERE
+    }
+
+    // 4. Success - Proceed to Shopping
+    userState.grade = grade;
+    userState.pathway = pathway;
     userState.cart.core = getDefaultCore(userState.grade);
-    
-    // Reset Electives/Alts
     userState.cart.electives = [];
     userState.cart.alternates = [];
 
     document.getElementById('studentHeader').innerText = `Grade ${userState.grade} | ${userState.pathway}`;
     renderCart();
     
-    // Trigger the pathway tab click to refresh the catalog view
+    // Auto-select the "My Pathway" tab
     const pathBtn = document.querySelector('.tab-cat[data-type="pathway"]');
     if(pathBtn) pathBtn.click();
     
