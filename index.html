@@ -266,69 +266,55 @@
         <button id="startBtn" class="btn btn-red" style="width:100%">Start Building</button>
       </div>
     </div>
-  
     <div id="view-shopping" class="view-section">
-      <button class="btn-sm" onclick="showView('view-form')" style="margin-bottom:10px;">← Back to Profile</button>
-  
-      <div class="shop-cols">
-        <div class="col-left">
-          <div style="background:#333; color:white; padding:15px; border-radius:8px 8px 0 0;">
-            <h4 id="studentHeader" style="margin:0;">My Schedule</h4>
-            <div style="font-size:11px; opacity:0.8; margin-top:5px;">Credits: <span id="slotCount">0</span>/7</div>
-          </div>
-          <div id="coreSlots"></div>
-          <div id="flexSlots"></div>
-          <div style="background:#f4f4f4; padding:10px; border-top:2px solid #ddd;">
-            <div style="font-size:10px; font-weight:bold; color:#666; margin-bottom:5px;">ALTERNATES (2 Required)</div>
-            <div id="altSlots"></div>
-          </div>
-          <div style="padding:15px;">
-            <button class="btn btn-red" style="width:100%" id="btn-finish">Review & Submit</button>
-          </div>
+    <button class="btn-sm" onclick="showView('view-form')" style="margin-bottom:10px;">← Back to Profile</button>
+
+    <div class="shop-cols">
+      
+      <div class="col-left">
+        <div style="background:#333; color:white; padding:15px; border-radius:8px 8px 0 0;">
+          <h4 id="studentHeader" style="margin:0;">My Schedule</h4>
+          <div style="font-size:11px; opacity:0.8; margin-top:5px;">Credits: <span id="slotCount">0</span>/7</div>
         </div>
-  
-        <div class="col-right">
-          <div style="margin-bottom:15px; display:flex; gap:10px; flex-wrap:wrap;">
-            <button class="btn-sm tab-cat" data-type="pathway">My Pathway</button>
-            <button class="btn-sm tab-cat" data-type="required">Required Electives</button>
-            <button class="btn-sm tab-cat" data-type="general">General Electives</button>
-          </div>
-          <div id="guidanceBox" class="guide">Loading...</div>
-          <div id="catalogList" class="grid" style="grid-template-columns:1fr;"></div>
+        
+        <div id="coreSlots"></div>
+        <div id="flexSlots"></div>
+        
+        <div style="background:#f4f4f4; padding:10px; border-top:2px solid #ddd;">
+          <div style="font-size:10px; font-weight:bold; color:#666; margin-bottom:5px;">ALTERNATES (2 Required)</div>
+          <div id="altSlots"></div>
+        </div>
+        
+        <div style="padding:15px; background:#fff; border-top:1px solid #eee; font-size:11px; color:#555; line-height:1.4;">
+            
+            <p style="margin-top:0; margin-bottom:10px;">
+                <strong>Accelerated/AP Enrollment:</strong> Eligibility criteria apply; counselor verification is required prior to selection. These courses involve increased rigor and time commitments. Per district policy, no schedule changes or drops will be allowed after the first 10 days of the semester.
+            </p>
+            
+            <p style="margin:0; padding-top:10px; border-top:1px dashed #ddd;">
+                <strong>Selection Notice & Privacy:</strong> This selection process is a request and does not guarantee enrollment into the course. All data submitted (Name, ID, Selections) is confidential and recorded solely by the Counseling Department for the purpose of schedule building.
+            </p>
+            
+        </div>
+        <div style="padding:15px;">
+          <button class="btn btn-red" style="width:100%" id="btn-finish">Review & Submit</button>
         </div>
       </div>
-    </div>
 
-    <div id="view-shopping" class="view-section">
-      <div class="shop-cols">
-        <div class="col-left">
-          <div style="background:#333; color:white; padding:15px; border-radius:8px 8px 0 0;">
-            <h4 id="studentHeader">My Schedule</h4>
-            <div style="font-size:11px; opacity:0.8;">Credits: <span id="slotCount">0</span>/7</div>
-          </div>
-          <div id="coreSlots"></div>
-          <div id="flexSlots"></div>
-          <div style="background:#f4f4f4; padding:10px; border-top:2px solid #ddd;">
-            <div style="font-size:10px; font-weight:bold; color:#666;">ALTERNATES (2 Required)</div>
-            <div id="altSlots"></div>
-          </div>
-          <div style="padding:15px;">
-            <button class="btn btn-red" style="width:100%" id="btn-finish">Review & Finish</button>
-          </div>
+      <div class="col-right">
+        <div style="margin-bottom:15px; display:flex; gap:10px; flex-wrap:wrap;">
+          <button class="btn-sm tab-cat" data-type="pathway">My Pathway</button>
+          <button class="btn-sm tab-cat" data-type="required">Required Electives</button>
+          <button class="btn-sm tab-cat" data-type="general">General Electives</button>
         </div>
-
-        <div class="col-right">
-          <div style="margin-bottom:15px; display:flex; gap:10px; flex-wrap:wrap;">
-            <button class="btn-sm tab-cat" data-type="pathway">My Pathway</button>
-            <button class="btn-sm tab-cat" data-type="required">Required Electives</button>
-            <button class="btn-sm tab-cat" data-type="general">General Electives</button>
-          </div>
-          <div id="guidanceBox" class="guide">Loading...</div>
-          <div id="catalogList" class="grid" style="grid-template-columns:1fr;"></div>
-        </div>
+        <div id="guidanceBox" class="guide">Loading...</div>
+        <div id="catalogList" class="grid" style="grid-template-columns:1fr;"></div>
       </div>
     </div>
+  </div>
 
+
+    
   </div> <div id="swapModal" class="modal-bg">
     <div class="modal">
       <h3>Swap Core Level</h3>
