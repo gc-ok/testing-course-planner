@@ -169,23 +169,26 @@
     </div>
 
     <div id="view-form" class="view-section">
-      <div style="max-width:500px; margin:30px auto;" class="card">
-        <h3 style="color:#D21F28; margin-bottom:15px;">Student Profile</h3>
+      <button class="btn-sm" onclick="showView('view-welcome')" style="margin-bottom:15px;">← Back to Home</button>
+      
+      <div style="max-width:500px; margin:0 auto;" class="card">
+        <h3 style="color:#D21F28; margin-bottom:15px; margin-top:0;">Student Profile</h3>
         
         <div style="display:flex; gap:10px;">
-            <div style="flex:1;">
-                <label style="font-size:12px; font-weight:bold;">First Name</label>
-                <input type="text" id="inputFName" style="width:100%; padding:8px; margin-bottom:10px; border:1px solid #ccc; border-radius:4px;" placeholder="John">
-            </div>
-            <div style="flex:1;">
-                <label style="font-size:12px; font-weight:bold;">Last Name</label>
-                <input type="text" id="inputLName" style="width:100%; padding:8px; margin-bottom:10px; border:1px solid #ccc; border-radius:4px;" placeholder="Doe">
-            </div>
+          <div style="flex:1;">
+              <label>First Name</label>
+              <input type="text" id="inputFName" placeholder="John">
+          </div>
+          <div style="flex:1;">
+              <label>Last Name</label>
+              <input type="text" id="inputLName" placeholder="Doe">
+          </div>
         </div>
-
-        <label style="font-size:12px; font-weight:bold;">Student ID #</label>
-        <input type="text" id="inputID" style="width:100%; padding:8px; margin-bottom:15px; border:1px solid #ccc; border-radius:4px;" placeholder="12345">
-        <label style="font-size:12px; font-weight:bold;">Grade Level Next Year:</label>
+  
+        <label>Student ID #</label>
+        <input type="text" id="inputID" placeholder="12345">
+  
+        <label>Grade Level Next Year:</label>
         <select id="gradeSelect">
           <option value="" disabled selected>Select Grade</option>
           <option value="9">Freshman (9th)</option>
@@ -193,38 +196,47 @@
           <option value="11">Junior (11th)</option>
           <option value="12">Senior (12th)</option>
         </select>
-
-        <div style="margin: 20px 0; border:1px solid #eee; padding:15px; border-radius:8px; background:#fafafa;">
-            
-            <div style="font-size:13px; color:#0d47a1; background:#e3f2fd; padding:10px; border-left:4px solid #2196F3; margin-bottom:15px; line-height:1.4;">
-                <strong>Need help finding your path?</strong><br>
-                Our pathways are organized by <strong>Career Cluster</strong>. For example, if you want "Law," look inside the "Human Services" cluster. Use the chart below to find your specific pathway interest.
-            </div>
         
-            <div style="text-align:center;">
-                <a href="./pathway_flowchart.png" target="_blank" title="Click to view full size">
-                    <img src="./pathway_flowchart.png" 
-                         alt="Pathway Flowchart" 
-                         style="max-width: 100%; height: auto; border: 1px solid #ccc; border-radius: 4px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); cursor: zoom-in;">
-                </a>
-                
-                <p style="font-size:10px; color:#666; margin-top:5px; font-style:italic;">
-                    (Click/Tap image to zoom in)
-                </p>
-            </div>
+        <label>My Pathway:</label>
+        <select id="pathwaySelect"><option value="">-- Select Pathway --</option></select>
+        
+        <div style="font-size:11px; color:#666; margin:15px 0; background:#f9f9f9; padding:10px; border-left:3px solid #ccc;">
+          <strong>Privacy Notice:</strong> Your selections are recorded for schedule building.
         </div>
-        
-        <label style="font-size:12px; font-weight:bold;">Career Interest:</label>
-        <select id="categorySelect"><option value="">-- Select --</option></select>
-        
-        <label style="font-size:12px; font-weight:bold;">Pathway:</label>
-        <select id="pathwaySelect"><option value="">-- Select Category First --</option></select>
-        
-        <div style="font-size:11px; color:#666; margin-bottom:15px; line-height:1.4; background:#f9f9f9; padding:10px; border-left:3px solid #ccc;">
-        <strong>Privacy Notice:</strong> By proceeding, you acknowledge that your name, student ID, and course selections will be recorded by the Counseling Department for the purpose of schedule building.
-        </div>
-
+  
         <button id="startBtn" class="btn btn-red" style="width:100%" disabled>Start Building</button>
+      </div>
+    </div>
+  
+    <div id="view-shopping" class="view-section">
+      <button class="btn-sm" onclick="showView('view-form')" style="margin-bottom:10px;">← Back to Profile</button>
+  
+      <div class="shop-cols">
+        <div class="col-left">
+          <div style="background:#333; color:white; padding:15px; border-radius:8px 8px 0 0;">
+            <h4 id="studentHeader" style="margin:0;">My Schedule</h4>
+            <div style="font-size:11px; opacity:0.8; margin-top:5px;">Credits: <span id="slotCount">0</span>/7</div>
+          </div>
+          <div id="coreSlots"></div>
+          <div id="flexSlots"></div>
+          <div style="background:#f4f4f4; padding:10px; border-top:2px solid #ddd;">
+            <div style="font-size:10px; font-weight:bold; color:#666; margin-bottom:5px;">ALTERNATES (2 Required)</div>
+            <div id="altSlots"></div>
+          </div>
+          <div style="padding:15px;">
+            <button class="btn btn-red" style="width:100%" id="btn-finish">Review & Submit</button>
+          </div>
+        </div>
+  
+        <div class="col-right">
+          <div style="margin-bottom:15px; display:flex; gap:10px; flex-wrap:wrap;">
+            <button class="btn-sm tab-cat" data-type="pathway">My Pathway</button>
+            <button class="btn-sm tab-cat" data-type="required">Required Electives</button>
+            <button class="btn-sm tab-cat" data-type="general">General Electives</button>
+          </div>
+          <div id="guidanceBox" class="guide">Loading...</div>
+          <div id="catalogList" class="grid" style="grid-template-columns:1fr;"></div>
+        </div>
       </div>
     </div>
 
@@ -395,59 +407,78 @@
   }
 
   function initApp() {
-      // Safety check to ensure we are not in a broken frame
       const root = document.getElementById('mhs-app-root');
-      if (!root) return; // Stop if HTML isn't there
+      if (!root) return;
 
-      // Bind initial buttons
+      // 1. Navigation Buttons
       document.getElementById('btn-know-path').onclick = function() { showView('view-form'); };
       document.getElementById('btn-explore-path').onclick = function() { showView('view-explore'); };
       document.getElementById('btn-back-explore').onclick = function() { showView('view-welcome'); };
       
-      document.getElementById('categorySelect').onchange = filterPathways;
+      // 2. Form & Inputs
+      // REMOVED: categorySelect listener
       document.getElementById('pathwaySelect').onchange = checkReady;
       document.getElementById('gradeSelect').onchange = checkReady;
-      document.getElementById('startBtn').onclick = initShopping;
-      
-      document.getElementById('btn-finish').onclick = finishSchedule;
-      
-      document.getElementById('btn-cancel-swap').onclick = function() { closeModal('swapModal'); };
-      document.getElementById('btn-confirm-swap').onclick = confirmCourseSwap;
       document.getElementById('inputFName').addEventListener('input', checkReady);
       document.getElementById('inputLName').addEventListener('input', checkReady);
       document.getElementById('inputID').addEventListener('input', checkReady);
+
+      // 3. Action Buttons
+      document.getElementById('startBtn').onclick = initShopping;
+      document.getElementById('btn-finish').onclick = finishSchedule;
       
+      // 4. Modal Buttons
+      // Changed closeModal() to direct style manipulation to be safe
+      document.getElementById('btn-cancel-swap').onclick = function() { document.getElementById('swapModal').style.display = 'none'; };
+      document.getElementById('btn-confirm-swap').onclick = confirmCourseSwap;
+      
+      // 5. Catalog Tabs
       document.querySelectorAll('.tab-cat').forEach(btn => {
           btn.onclick = function() { renderCatalog(this.dataset.type, this); };
       });
 
-      // Load Data
-      if(DATA_FILE_URL.includes("REPLACE_THIS")) {
-        console.error("MHS App: URL not set.");
-        return;
+      // 6. Data Loading
+      if(DATA_FILE_URL.includes("REPLACE")) {
+         console.error("DATA URL NOT SET");
+         document.getElementById('mhs-loader').innerHTML = "<h3 style='color:red'>Setup Error</h3><p>Data file URL is missing.</p>";
+         return;
       }
 
       fetch(DATA_FILE_URL)
-        .then(response => response.json())
+        .then(r => r.json())
         .then(data => {
           schoolData = data;
-          // Fix IDs
+          
+          // Data Cleanup
           schoolData.catalog.forEach((c, i) => {
              if(!c.id) c.id = "GEN_" + i;
              if(!Array.isArray(c.pathway_tags)) c.pathway_tags = [];
           });
           
-          const loader = document.getElementById('mhs-loader');
-          if(loader) loader.classList.add('hidden');
-          
+          document.getElementById('mhs-loader').classList.add('hidden');
           showView('view-welcome');
-          populateCategories();
+          
+          // --- NEW LOGIC: Populate the dropdown immediately ---
+          // Since we removed categories, we must list ALL pathways here.
+          const sel = document.getElementById('pathwaySelect');
+          sel.innerHTML = '<option value="">-- Select Pathway --</option>';
+          
+          // Sort them alphabetically so the list is easy to scan
+          const sortedPaths = schoolData.pathways.sort((a,b) => a.name.localeCompare(b.name));
+          
+          sortedPaths.forEach(p => {
+             let opt = document.createElement('option'); 
+             opt.value = p.name; 
+             opt.text = p.name; 
+             sel.add(opt);
+          });
+          
           renderCards();
         })
         .catch(err => {
           console.error(err);
           const loader = document.getElementById('mhs-loader');
-          if(loader) loader.innerHTML = `<h3 style='color:red'>Error Loading Data</h3><p>Check console or file URL.</p>`;
+          if(loader) loader.innerHTML = "<h3 style='color:red'>Error Loading Data</h3><p>Could not connect to database file.</p>";
         });
   }
 
@@ -467,15 +498,19 @@
     });
   }
 
-  // --- HELPER: Formats text with Line Breaks AND 'More Info' Links ---
+  // --- HELPER: Auto-Bold Labels, Links, and Line Breaks ---
   function formatDescription(text) {
       if (!text) return '';
       
-      // 1. Replace newlines with <br>
-      let formatted = text.replace(/\n/g, '<br>');
+      // 1. Auto-Bold logic:
+      // Look for lines starting with "Some Text:" and bold the "Some Text" part.
+      // (?!http) prevents it from bolding "https:" in URLs
+      let formatted = text.replace(/^((?!http)[^:\n]+):/gm, '<strong>$1</strong>:');
 
-      // 2. Auto-link URLs -> Display "More Info"
-      // We keep '$1' in the href (the destination), but change the display text
+      // 2. Replace newlines with <br>
+      formatted = formatted.replace(/\n/g, '<br>');
+
+      // 3. Auto-link URLs -> Display "More Info"
       formatted = formatted.replace(
           /(https?:\/\/[^\s]+)/g, 
           '<a href="$1" target="_blank" style="color:#D21F28; text-decoration:underline; font-weight:bold;">More Info</a>'
@@ -535,10 +570,9 @@
       grid.appendChild(card);
     });
   }
-  
+
   function selectPath(cat, name) {
-    document.getElementById('categorySelect').value = cat;
-    filterPathways();
+    // We removed categorySelect, so just set the pathway directly
     document.getElementById('pathwaySelect').value = name;
     checkReady();
     showView('view-form');
