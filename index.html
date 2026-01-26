@@ -89,6 +89,49 @@
     /* 5. Hide buttons inside the modal */
     .modal button { display: none !important; }
   }
+
+
+  /* --- CARD COLLAPSE STYLES --- */
+  .desc-box {
+      max-height: 100px; /* Only show the first ~5 lines */
+      overflow: hidden;
+      position: relative;
+      transition: max-height 0.5s ease; /* Smooth animation */
+      margin-bottom: 10px;
+  }
+  
+  /* The fade-out effect at the bottom */
+  .desc-box::after {
+      content: "";
+      position: absolute;
+      bottom: 0; left: 0; width: 100%;
+      height: 60px;
+      background: linear-gradient(to bottom, rgba(255,255,255,0), rgba(255,255,255,1));
+      pointer-events: none;
+      transition: opacity 0.3s;
+  }
+
+  /* When expanded, remove the limit and the fade */
+  .desc-box.expanded {
+      max-height: 2000px; /* Arbitrary large number to allow full expansion */
+  }
+  .desc-box.expanded::after {
+      opacity: 0;
+  }
+
+  /* The link style for "Read More" */
+  .toggle-link {
+      background: none;
+      border: none;
+      color: #007bff;
+      font-size: 12px;
+      font-weight: bold;
+      cursor: pointer;
+      padding: 0;
+      text-decoration: underline;
+      display: inline-block;
+      margin-bottom: 15px;
+  }
 </style>
 
 <div id="mhs-app-root">
@@ -449,19 +492,46 @@
       const card = document.createElement('div'); 
       card.className = 'card';
       
-      // USE THE NEW HELPER HERE
+      // Use the helper we wrote earlier to format links/newlines
       const descHtml = formatDescription(p.description);
 
       card.innerHTML = `
         <div style="font-size:10px; color:#888; text-transform:uppercase; font-weight:bold;">${p.category}</div>
         <h4 style="margin:10px 0; color:#333;">${p.name}</h4>
         
-        <p style="font-size:12px; color:#666; line-height:1.5;">${descHtml}</p>
+        <div class="desc-box" id="desc-${p.name.replace(/\s/g,'')}">
+            <div style="font-size:12px; color:#666; line-height:1.5;">
+                ${descHtml}
+            </div>
+        </div>
         
-        <button class="btn-sm" style="margin-top:15px; color:#D21F28; border-color:#D21F28">Select Pathway</button>
+        <button class="toggle-link">Read More +</button>
+        <br>
+        
+        <button class="btn-sm" style="color:#D21F28; border-color:#D21F28">Select Pathway</button>
       `;
       
-      card.querySelector('button').onclick = function() { selectPath(p.category, p.name); };
+      // Logic for "Select" button
+      card.querySelector('.btn-sm').onclick = function() { selectPath(p.category, p.name); };
+
+      // Logic for "Read More" toggle
+      const toggleBtn = card.querySelector('.toggle-link');
+      const descBox = card.querySelector('.desc-box');
+
+      toggleBtn.onclick = function() {
+          const isExpanded = descBox.classList.contains('expanded');
+          
+          if (isExpanded) {
+              // Collapse it
+              descBox.classList.remove('expanded');
+              toggleBtn.innerText = "Read More +";
+          } else {
+              // Expand it
+              descBox.classList.add('expanded');
+              toggleBtn.innerText = "Show Less -";
+          }
+      };
+
       grid.appendChild(card);
     });
   }
