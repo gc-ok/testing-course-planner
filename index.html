@@ -834,12 +834,12 @@
     let cores = [];
     if(grade === "9") {
         cores.push(findC("English I"));
-        cores.push([ findC("Oklahoma History"), findC("Essentials I") ]); 
+        cores.push([ findC("Oklahoma History"), findC("High School Essentials I") ]); 
         cores.push(findC("Physical Science"));
         cores.push(findC("Algebra I"));
     } else if(grade === "10") {
         cores.push(findC("English II"));
-        cores.push([ findC("World History"), findC("Essentials II") ]);
+        cores.push([ findC("World History"), findC("High School Essentials II") ]);
         cores.push(findC("Geometry"));
         cores.push(findC("Biology"));
     } else if(grade === "11") {
@@ -1135,7 +1135,7 @@
     }
     // LOGIC: Swapping FROM AP World back to Standard (restores array)
     else if(p.subIndex === -1 && userState.cart.core[p.coreIndex].title.includes("AP World History")) {
-         userState.cart.core[p.coreIndex] = [ newCourse, findC("Essentials II") ];
+         userState.cart.core[p.coreIndex] = [ newCourse, findC("High School Essentials II") ];
     }
     // LOGIC: Senior Gov
     else if(newCourse.title.includes("AP US Government")) {
