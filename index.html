@@ -693,75 +693,73 @@
   // document.getElementById('inputLName').addEventListener('input', checkReady);
   // document.getElementById('inputID').addEventListener('input', checkReady);
   
-  function sendToGoogleForm() {
-    // --- HELPER: Strip unnecessary data ---
-    const simplify = (c) => ({
-        id: c.id,
-        title: c.title,
-        credits: c.credits,
-        prerequisite: c.prerequisite || "None"
-    });
+  async function sendToGoogleForm() {
+  const simplify = (c) => ({
+      id: c.id,
+      title: c.title,
+      credits: c.credits
+  });
 
-    // --- 1. Create a Clean Cart ---
-    const cleanCart = {
-        core: userState.cart.core.map(item => {
-            // Handle split core classes (Arrays) vs single classes
-            if(Array.isArray(item)) {
-                return [ simplify(item[0]), simplify(item[1]) ];
-            }
-            return simplify(item);
-        }),
-        electives: userState.cart.electives.map(simplify),
-        alternates: userState.cart.alternates.map(simplify)
-    };
+  const studentData = {
+      firstName: document.getElementById('inputFName').value,
+      lastName:  document.getElementById('inputLName').value,
+      studentId: document.getElementById('inputID').value,
+      grade:     userState.grade,
+      pathway:   userState.pathway,
+      courses:   {
+          core: userState.cart.core.map(item => Array.isArray(item) ? [simplify(item[0]), simplify(item[1])] : simplify(item)),
+          electives: userState.cart.electives.map(simplify),
+          alternates: userState.cart.alternates.map(simplify)
+      }
+  };
 
-    // --- 2. Gather Data ---
-    const studentData = {
-        firstName: document.getElementById('inputFName').value,
-        lastName:  document.getElementById('inputLName').value,
-        studentId: document.getElementById('inputID').value,
-        grade:     userState.grade,
-        pathway:   userState.pathway,
-        courses:   cleanCart // Send the cleaned version
-    };
+  const formData = new FormData();
+  formData.append(FORM_FIELDS.firstName, studentData.firstName);
+  formData.append(FORM_FIELDS.lastName, studentData.lastName);
+  formData.append(FORM_FIELDS.studentId, studentData.studentId);
+  formData.append(FORM_FIELDS.jsonData, JSON.stringify(studentData));
 
-    // --- 3. Prepare Form Data ---
-    const formData = new FormData();
-    formData.append(FORM_FIELDS.firstName, studentData.firstName);
-    formData.append(FORM_FIELDS.lastName, studentData.lastName);
-    formData.append(FORM_FIELDS.studentId, studentData.studentId);
-    
-    // Convert to JSON (Now much smaller and cleaner)
-    formData.append(FORM_FIELDS.jsonData, JSON.stringify(studentData, null, 2));
+  const finishBtn = document.getElementById('btn-finish');
+  finishBtn.innerText = "Submitting...";
+  finishBtn.disabled = true;
 
-    // --- 4. UI Feedback ---
-    const finishBtn = document.getElementById('btn-finish');
-    const originalText = finishBtn.innerText;
-    finishBtn.innerText = "Submitting...";
-    finishBtn.disabled = true;
+  // --- RETRY LOGIC ENGINE ---
+  const MAX_RETRIES = 3;
+  let attempt = 0;
+  let success = false;
 
-    // --- 5. Send ---
-    fetch(GOOGLE_FORM_URL, {
-        method: "POST",
-        mode: "no-cors",
-        body: formData
-    })
-    .then(() => {
-        console.log("Form Submitted");
-        populateReceipt(); 
-        document.getElementById('finishModal').style.display='flex';
-    })
-    .catch(err => {
-        console.error("Submission Error", err);
-        // Fallback: Show modal anyway so they can print
-        populateReceipt();
-        document.getElementById('finishModal').style.display='flex';
-    })
-    .finally(() => {
-        finishBtn.innerText = originalText;
-        finishBtn.disabled = false;
-    });
+  while (attempt < MAX_RETRIES && !success) {
+      try {
+          // We use 'no-cors' because Google Forms doesn't return a CORS header, 
+          // but the data still reaches the sheet.
+          await fetch(GOOGLE_FORM_URL, {
+              method: "POST",
+              mode: "no-cors",
+              body: formData
+          });
+          
+          success = true; // In 'no-cors' mode, if fetch doesn't throw, we assume success
+      } catch (err) {
+          attempt++;
+          if (attempt < MAX_RETRIES) {
+              console.warn(`Submission failed. Retry attempt ${attempt}...`);
+              // Wait before retrying: 1sec, then 2sec, then 4sec
+              await new Promise(resolve => setTimeout(resolve, Math.pow(2, attempt) * 500));
+          } else {
+              console.error("Final submission attempt failed.", err);
+              showModal("Connection Error", "We're having trouble reaching the server due to high traffic. Please try clicking Submit again in a few seconds.", false);
+          }
+      }
   }
+
+  if (success) {
+      populateReceipt();
+      document.getElementById('finishModal').style.display = 'flex';
+  }
+
+  finishBtn.innerText = "Review & Submit";
+  finishBtn.disabled = false;
+}
 
   // --- SHOPPING ---
   function initShopping() {
