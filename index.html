@@ -1097,34 +1097,21 @@ class TourGuide {
   // --- HELPER: Create a "Nuclear" Delete Button ---
   // We use position:absolute to force it above any invisible overlapping containers
   function createSafeDeleteBtn(index, type) {
-    const btn = document.createElement('button');
-    btn.innerHTML = '&times;';
-    btn.className = 'btn-sm';
-    
-    // Simple inline styles - NO absolute positioning, NO z-index
-    btn.style.cssText = `
-        color: #c00;
-        font-weight: bold;
-        font-size: 18px;
-        cursor: pointer;
-        background: transparent;
-        border: none;
-        padding: 0 10px;
-        margin-left: auto;
-        flex-shrink: 0;
-    `;
-
-    btn.setAttribute('data-target-index', index);
-
-    btn.addEventListener('click', function(e) {
-        e.stopPropagation();
-        console.log(`[Click Event] Clicked 'X' for ${type} at Index ${index}`);
-        if(type === 'elective') remElec(index);
-        else remAlt(index);
-    });
-
-    return btn;
-}
+      const btn = document.createElement('span');
+      btn.innerHTML = '&times;';
+      btn.className = 'del-btn';
+      btn.setAttribute('data-index', index);
+      btn.setAttribute('data-type', type);
+      btn.style.cssText = `
+          color: #c00;
+          font-weight: bold;
+          font-size: 18px;
+          cursor: pointer;
+          padding: 5px 10px;
+          margin-left: auto;
+      `;
+      return btn;
+  }
 
   // --- RENDER CART (With Absolute Positioning) ---
   function renderCart() {
@@ -1271,7 +1258,40 @@ class TourGuide {
         d.querySelector('.cart-item').appendChild(btn);
         aDiv.appendChild(d);
     });
+    // --- EVENT DELEGATION (add this at the very end) ---
+    const eDiv = document.getElementById('flexSlots');
+    const aDiv = document.getElementById('altSlots');
     
+    // Remove old listeners by cloning
+    const newEDiv = eDiv.cloneNode(true);
+    const newADiv = aDiv.cloneNode(true);
+    eDiv.parentNode.replaceChild(newEDiv, eDiv);
+    aDiv.parentNode.replaceChild(newADiv, aDiv);
+    
+    // Single listener for electives
+    newEDiv.addEventListener('click', function(e) {
+        const btn = e.target.closest('.del-btn');
+        if (btn) {
+            const idx = parseInt(btn.getAttribute('data-index'), 10);
+            console.log('[Delegation] Removing elective at index:', idx);
+            userState.cart.electives.splice(idx, 1);
+            renderCart();
+            refreshCatalog();
+        }
+    });
+    
+    // Single listener for alternates
+    newADiv.addEventListener('click', function(e) {
+        const btn = e.target.closest('.del-btn');
+        if (btn) {
+            const idx = parseInt(btn.getAttribute('data-index'), 10);
+            console.log('[Delegation] Removing alternate at index:', idx);
+            userState.cart.alternates.splice(idx, 1);
+            renderCart();
+            refreshCatalog();
+        }
+    });
+
     console.log("--- RENDER CART END ---");
   }
   
