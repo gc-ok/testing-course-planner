@@ -228,18 +228,31 @@
       box-shadow: 0 2px 5px rgba(0,0,0,0.1);
   }
 
-/* --- STICKY SIDEBAR (New) --- */
+/* --- STICKY SIDEBAR (UPDATED) --- */
   #mhs-app-root .col-left { 
       position: sticky; 
-      top: 20px; /* distance from top of screen */
-      align-self: start; /* required for flexbox sticky */
-      height: fit-content; 
-      z-index: 100; /* Ensure it stays above content */
+      top: 20px; 
+      align-self: start; 
+      z-index: 100; 
+      
+      /* --- FIX FOR SUBMIT BUTTON --- */
+      /* 1. Limit height to the screen height minus a little buffer */
+      max-height: calc(100vh - 40px); 
+      
+      /* 2. Add a scrollbar INSIDE the sidebar if it gets too tall */
+      overflow-y: auto; 
+      
+      /* 3. Make the scrollbar look nice (optional) */
+      scrollbar-width: thin; 
   }
 
   /* Disable sticky on mobile so it doesn't block the screen */
   @media (max-width: 768px) {
-      #mhs-app-root .col-left { position: static; }
+      #mhs-app-root .col-left { 
+          position: static; 
+          max-height: none; /* Remove limit on mobile */
+          overflow-y: visible; 
+      }
   }
 
   /* --- UPDATED TOUR STYLES --- */
