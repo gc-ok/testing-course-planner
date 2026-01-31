@@ -1094,17 +1094,31 @@ class TourGuide {
       }
   }
 
-  // --- HELPER: Create a "Hardened" Delete Button ---
+  // --- HELPER: Create a "Nuclear" Delete Button ---
+  // We use position:absolute to force it above any invisible overlapping containers
   function createSafeDeleteBtn(index, type) {
-      const btn = document.createElement('span');
+      const btn = document.createElement('div'); // Changed to DIV for better hit area
       btn.innerHTML = '&times;';
-      btn.className = 'del'; 
-      btn.title = 'Remove';
+      
+      // Styling to force visibility and clickability
+      btn.style.position = 'absolute';
+      btn.style.right = '0';
+      btn.style.top = '0';
+      btn.style.bottom = '0';
+      btn.style.width = '40px'; // Large click target
+      btn.style.display = 'flex';
+      btn.style.alignItems = 'center';
+      btn.style.justifyContent = 'center';
+      btn.style.color = '#c00';
+      btn.style.fontWeight = 'bold';
+      btn.style.fontSize = '18px';
       btn.style.cursor = 'pointer'; 
-      btn.style.zIndex = '1000'; // Force it above other elements
-      btn.style.position = 'relative'; // Helps z-index work
+      btn.style.zIndex = '99999'; // The "Nuclear" Z-Index
+      btn.style.background = 'rgba(255,255,255,0.8)'; // Slight background to ensure it covers text
 
-      // Attach listener immediately to this specific element
+      // Debug attribute
+      btn.setAttribute('data-target-index', index);
+
       btn.addEventListener('click', function(e) {
           e.stopPropagation(); // Stop event bubbling
           console.log(`[Click Event] Clicked 'X' for ${type} at Index ${index}`);
@@ -1115,7 +1129,7 @@ class TourGuide {
       return btn;
   }
 
-  // --- RE-WRITTEN RENDER CART ---
+  // --- RENDER CART (With Absolute Positioning) ---
   function renderCart() {
     console.log("--- RENDER CART START ---");
     
@@ -1125,9 +1139,10 @@ class TourGuide {
     userState.cart.electives.forEach(c => tot+=c.credits);
     document.getElementById('slotCount').innerText = tot;
 
-    // 2. Render CORE (Standard logic)
+    // 2. Render CORE (Standard)
     const cDiv = document.getElementById('coreSlots'); 
     cDiv.innerHTML='';
+    // (Core rendering logic remains the same, assuming it works)
     userState.cart.core.forEach((item, i) => {
       const row = document.createElement('div');
       if(Array.isArray(item)) {
@@ -1162,30 +1177,32 @@ class TourGuide {
       cDiv.appendChild(row);
     });
 
-    // 3. Render ELECTIVES (The Problem Area)
+    // 3. Render ELECTIVES (ABSOLUTE POSITION FIX)
     const eDiv = document.getElementById('flexSlots'); 
     eDiv.innerHTML='';
     const processed = new Set();
     let count=1;
 
     userState.cart.electives.forEach((c, idx) => {
-      if(processed.has(idx)) return; 
+      if(processed.has(idx)) return;
       
       const row = document.createElement('div');
+      // IMPORTANT: We set overflow visible so the button isn't clipped
+      row.style.overflow = "visible"; 
       
       if(c.credits >= 1) {
         // --- FULL YEAR ELECTIVE ---
         console.log(`Rendering Year Course: Index ${idx}, Title: ${c.title}`);
         
+        // We add 'position: relative' to the cart-item so the absolute button sticks to IT
         row.innerHTML = `
-            <div class="cart-item" style="border-left: 4px solid #FF9800;">
+            <div class="cart-item" style="border-left: 4px solid #FF9800; position: relative; padding-right: 40px;">
                 <div>
                     <span class="cart-label">Elective ${count}</span>
                     <span class="cart-title">${c.title}</span>
                 </div>
                 </div>`;
         
-        // Create and Append Button
         const btn = createSafeDeleteBtn(idx, 'elective');
         row.querySelector('.cart-item').appendChild(btn);
         
@@ -1201,16 +1218,18 @@ class TourGuide {
         const p1Title = c.title;
         const p2Title = partner!==-1 ? userState.cart.electives[partner].title : "<span style='color:#ccc; font-style:italic;'>-- Select Semester 2 --</span>";
 
-        console.log(`Rendering Pair: TopIndex ${idx} (${p1Title}) & BotIndex ${partner} (${p2Title})`);
+        console.log(`Rendering Pair: TopIndex ${idx} & BotIndex ${partner}`);
 
-        // Create Container
+        // We add 'position: relative' and 'padding-right' to BOTH containers
         row.innerHTML = `
             <div style="border-left: 4px solid #FF9800; background:white; border-bottom:1px solid #ddd;">
                 <div class="split-header" style="background:#fff3e0; color:#e65100;">Elective ${count} (Semesters)</div>
-                <div class="cart-item sem-top-container">
+                
+                <div class="cart-item sem-top-container" style="position:relative; padding-right:40px;">
                     <span class="cart-title">${p1Title}</span>
                 </div>
-                <div class="cart-item sem-bot-container" style="border-top:1px dashed #eee;">
+                
+                <div class="cart-item sem-bot-container" style="border-top:1px dashed #eee; position:relative; padding-right:40px;">
                     <span class="cart-title">${p2Title}</span>
                 </div>
             </div>`;
@@ -1218,15 +1237,12 @@ class TourGuide {
         // 1. Append Top Button
         const topContainer = row.querySelector('.sem-top-container');
         const btnTop = createSafeDeleteBtn(idx, 'elective');
-        // Add specific spacing to make sure it doesn't overlap text
-        btnTop.style.marginLeft = "10px"; 
         topContainer.appendChild(btnTop);
 
         // 2. Append Bottom Button (if partner exists)
         if(partner !== -1) {
             const botContainer = row.querySelector('.sem-bot-container');
             const btnBot = createSafeDeleteBtn(partner, 'elective');
-            btnBot.style.marginLeft = "10px";
             botContainer.appendChild(btnBot);
         }
         
@@ -1248,7 +1264,7 @@ class TourGuide {
     userState.cart.alternates.forEach((c,i) => {
         const d = document.createElement('div');
         d.innerHTML = `
-            <div class="cart-item" style="background:#fff;">
+            <div class="cart-item" style="background:#fff; position:relative; padding-right:40px;">
                 <div>
                     <span class="cart-label" style="color:#666;">Alternate ${i+1}</span>
                     <span class="cart-title" style="font-size:13px;">${c.title}</span>
