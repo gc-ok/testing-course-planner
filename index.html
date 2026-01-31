@@ -1067,15 +1067,21 @@ class TourGuide {
     return cores;
   }
 
-  // --- UPDATED REMOVE FUNCTIONS ---
+  // --- UPDATED REMOVE FUNCTIONS (With Debugging) ---
   function remElec(i) { 
-      console.log(`[remElec] Removing Index ${i}`);
+      console.log(`[remElec] Request to remove Index ${i}`);
+      console.log(`[remElec] Array before:`, JSON.parse(JSON.stringify(userState.cart.electives)));
+      
       userState.cart.electives.splice(i,1); 
+      
+      console.log(`[remElec] Array after:`, JSON.parse(JSON.stringify(userState.cart.electives)));
+      
       renderCart(); 
       refreshCatalog(); 
   }
    
   function remAlt(i) { 
+      console.log(`[remAlt] Request to remove Alternate Index ${i}`);
       userState.cart.alternates.splice(i,1); 
       renderCart(); 
       refreshCatalog(); 
@@ -1088,28 +1094,34 @@ class TourGuide {
       }
   }
 
-  // --- HELPER: Create Flexbox Delete Button ---
-  function createFlexDelBtn(index, type) {
-      const btn = document.createElement('div');
+  // --- HELPER: Create a "Nuclear" Delete Button ---
+  // We use position:absolute to force it above any invisible overlapping containers
+  function createSafeDeleteBtn(index, type) {
+      const btn = document.createElement('div'); // Changed to DIV for better hit area
       btn.innerHTML = '&times;';
       
-      // Flexbox Friendly Styling
-      btn.style.marginLeft = '10px'; // Space from text
-      btn.style.padding = '0 8px';   // Click area width
-      btn.style.height = '100%';     // Full height
+      // Styling to force visibility and clickability
+      btn.style.position = 'absolute';
+      btn.style.right = '0';
+      btn.style.top = '0';
+      btn.style.bottom = '0';
+      btn.style.width = '40px'; // Large click target
       btn.style.display = 'flex';
       btn.style.alignItems = 'center';
-      btn.style.cursor = 'pointer';
+      btn.style.justifyContent = 'center';
       btn.style.color = '#c00';
       btn.style.fontWeight = 'bold';
-      btn.style.fontSize = '20px';
-      
-      // Prevent text selection on double click
-      btn.style.userSelect = 'none'; 
+      btn.style.fontSize = '18px';
+      btn.style.cursor = 'pointer'; 
+      btn.style.zIndex = '99999'; // The "Nuclear" Z-Index
+      btn.style.background = 'rgba(255,255,255,0.8)'; // Slight background to ensure it covers text
+
+      // Debug attribute
+      btn.setAttribute('data-target-index', index);
 
       btn.addEventListener('click', function(e) {
-          e.stopPropagation(); 
-          console.log(`[Click] Removing ${type} at index ${index}`);
+          e.stopPropagation(); // Stop event bubbling
+          console.log(`[Click Event] Clicked 'X' for ${type} at Index ${index}`);
           if(type === 'elective') remElec(index);
           else remAlt(index);
       });
@@ -1117,9 +1129,9 @@ class TourGuide {
       return btn;
   }
 
-  // --- ROBUST RENDER CART (Flexbox Version) ---
+  // --- RENDER CART (With Absolute Positioning) ---
   function renderCart() {
-    console.log("--- RENDER CART (FLEX) ---");
+    console.log("--- RENDER CART START ---");
     
     // 1. Calculate Total Credits
     let tot = 0;
@@ -1130,6 +1142,7 @@ class TourGuide {
     // 2. Render CORE (Standard)
     const cDiv = document.getElementById('coreSlots'); 
     cDiv.innerHTML='';
+    // (Core rendering logic remains the same, assuming it works)
     userState.cart.core.forEach((item, i) => {
       const row = document.createElement('div');
       if(Array.isArray(item)) {
@@ -1164,28 +1177,33 @@ class TourGuide {
       cDiv.appendChild(row);
     });
 
-    // 3. Render ELECTIVES (FLEXBOX FIX)
+    // 3. Render ELECTIVES (ABSOLUTE POSITION FIX)
     const eDiv = document.getElementById('flexSlots'); 
     eDiv.innerHTML='';
     const processed = new Set();
     let count=1;
 
     userState.cart.electives.forEach((c, idx) => {
-      if(processed.has(idx)) return; 
-      
+      if(processed.has(idx)) return;
+            
       const row = document.createElement('div');
+      row.style.overflow = "visible"; 
+      row.style.position = "relative";  // ← ADD THIS LINE
       
       if(c.credits >= 1) {
         // --- FULL YEAR ELECTIVE ---
-        // Create a Container that is Flexbox
+        console.log(`Rendering Year Course: Index ${idx}, Title: ${c.title}`);
+        
+        // We add 'position: relative' to the cart-item so the absolute button sticks to IT
         row.innerHTML = `
-            <div class="cart-item" style="border-left: 4px solid #FF9800; display: flex; justify-content: space-between; align-items: center;">
-                <div style="flex-grow: 1;"> <span class="cart-label">Elective ${count}</span>
+            <div class="cart-item" style="border-left: 4px solid #FF9800; position: relative; padding-right: 40px;">
+                <div>
+                    <span class="cart-label">Elective ${count}</span>
                     <span class="cart-title">${c.title}</span>
                 </div>
                 </div>`;
         
-        const btn = createFlexDelBtn(idx, 'elective');
+        const btn = createSafeDeleteBtn(idx, 'elective');
         row.querySelector('.cart-item').appendChild(btn);
         
         processed.add(idx);
@@ -1200,27 +1218,32 @@ class TourGuide {
         const p1Title = c.title;
         const p2Title = partner!==-1 ? userState.cart.electives[partner].title : "<span style='color:#ccc; font-style:italic;'>-- Select Semester 2 --</span>";
 
+        console.log(`Rendering Pair: TopIndex ${idx} & BotIndex ${partner}`);
+
+        // We add 'position: relative' and 'padding-right' to BOTH containers
         row.innerHTML = `
-            <div style="border-left: 4px solid #FF9800; background:white; border-bottom:1px solid #ddd;">
+            <div style="border-left: 4px solid #FF9800; background:white; border-bottom:1px solid #ddd; position:relative;">
                 <div class="split-header" style="background:#fff3e0; color:#e65100;">Elective ${count} (Semesters)</div>
                 
-                <div class="cart-item sem-top" style="display: flex; justify-content: space-between; align-items: center;">
-                    <span class="cart-title" style="flex-grow: 1;">${p1Title}</span>
+                <div class="cart-item sem-top-container" style="position:relative; padding-right:40px;">
+                    <span class="cart-title">${p1Title}</span>
                 </div>
                 
-                <div class="cart-item sem-bot" style="border-top:1px dashed #eee; display: flex; justify-content: space-between; align-items: center;">
-                    <span class="cart-title" style="flex-grow: 1;">${p2Title}</span>
+                <div class="cart-item sem-bot-container" style="border-top:1px dashed #eee; position:relative; padding-right:40px;">
+                    <span class="cart-title">${p2Title}</span>
                 </div>
             </div>`;
 
-        // Append Top Button
-        const btnTop = createFlexDelBtn(idx, 'elective');
-        row.querySelector('.sem-top').appendChild(btnTop);
+        // 1. Append Top Button
+        const topContainer = row.querySelector('.sem-top-container');
+        const btnTop = createSafeDeleteBtn(idx, 'elective');
+        topContainer.appendChild(btnTop);
 
-        // Append Bottom Button (if partner exists)
+        // 2. Append Bottom Button (if partner exists)
         if(partner !== -1) {
-            const btnBot = createFlexDelBtn(partner, 'elective');
-            row.querySelector('.sem-bot').appendChild(btnBot);
+            const botContainer = row.querySelector('.sem-bot-container');
+            const btnBot = createSafeDeleteBtn(partner, 'elective');
+            botContainer.appendChild(btnBot);
         }
         
         processed.add(idx); 
@@ -1241,17 +1264,18 @@ class TourGuide {
     userState.cart.alternates.forEach((c,i) => {
         const d = document.createElement('div');
         d.innerHTML = `
-            <div class="cart-item" style="background:#fff; display: flex; justify-content: space-between; align-items: center;">
-                <div style="flex-grow: 1;">
+            <div class="cart-item" style="background:#fff; position:relative; padding-right:40px;">
+                <div>
                     <span class="cart-label" style="color:#666;">Alternate ${i+1}</span>
                     <span class="cart-title" style="font-size:13px;">${c.title}</span>
                 </div>
             </div>`;
-            
-        const btn = createFlexDelBtn(i, 'alternate');
+        const btn = createSafeDeleteBtn(i, 'alternate');
         d.querySelector('.cart-item').appendChild(btn);
         aDiv.appendChild(d);
     });
+    
+    console.log("--- RENDER CART END ---");
   }
   
   function renderCatalog(type, btnEl) {
@@ -1557,5 +1581,3 @@ class TourGuide {
   
 })();
 </script>
-
-
