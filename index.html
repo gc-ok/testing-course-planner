@@ -1067,6 +1067,29 @@ class TourGuide {
     return cores;
   }
 
+  // --- UPDATED REMOVE FUNCTIONS ---
+  function remElec(i) { 
+      userState.cart.electives.splice(i,1); 
+      renderCart(); 
+      refreshCatalog(); // Validates the catalog "Add" buttons immediately
+  }
+   
+  function remAlt(i) { 
+      userState.cart.alternates.splice(i,1); 
+      renderCart(); 
+      refreshCatalog(); // Validates the catalog "Add" buttons immediately
+  }
+
+  // Helper to re-render the current catalog tab
+  function refreshCatalog() {
+      const activeBtn = document.querySelector('.tab-cat.active');
+      // Only render if we are on a valid tab
+      if(activeBtn && activeBtn.dataset.type) {
+          renderCatalog(activeBtn.dataset.type, activeBtn);
+      }
+  }
+
+  // --- UPDATED RENDER CART (Fixes Semester Delete Buttons) ---
   function renderCart() {
     // 1. Calculate Total Credits
     let tot = 0;
@@ -1074,7 +1097,7 @@ class TourGuide {
     userState.cart.electives.forEach(c => tot+=c.credits);
     document.getElementById('slotCount').innerText = tot;
 
-    // 2. Render CORE Slots
+    // 2. Render CORE Slots (No changes needed here usually, but good to include for safety)
     const cDiv = document.getElementById('coreSlots'); 
     cDiv.innerHTML='';
     
@@ -1082,18 +1105,14 @@ class TourGuide {
       const row = document.createElement('div');
       
       if(Array.isArray(item)) {
-        // --- SPLIT CORE (e.g. History + Essentials) ---
+        // --- SPLIT CORE ---
         row.innerHTML = `
             <div style="border-left: 4px solid #2196F3; background:white; border-bottom:1px solid #ddd;">
                 <div class="split-header">Core ${i+1} (Semester Split)</div>
-                
                 <div class="cart-item">
-                    <div>
-                        <span class="cart-title">${item[0].title}</span>
-                    </div>
+                    <div><span class="cart-title">${item[0].title}</span></div>
                     <button class="btn-sm swap-btn-0">Swap</button>
                 </div>
-                
                 <div class="cart-item" style="border-top:1px dashed #eee;">
                     <div>
                         <span class="cart-title">${item[1].title}</span>
@@ -1121,7 +1140,7 @@ class TourGuide {
       cDiv.appendChild(row);
     });
 
-    // 3. Render ELECTIVE Slots
+    // 3. Render ELECTIVE Slots (THE FIX IS HERE)
     const eDiv = document.getElementById('flexSlots'); 
     eDiv.innerHTML='';
     const processed = new Set();
@@ -1141,17 +1160,21 @@ class TourGuide {
                 </div>
                 <span class="del" title="Remove">&times;</span>
             </div>`;
+        
+        // Direct click binding
         row.querySelector('.del').onclick = function() { remElec(idx); };
         processed.add(idx);
+
       } else {
-        // --- SEMESTER PAIRS ---
+        // --- SEMESTER PAIRS (Fixing Logic) ---
         let partner = -1;
-        // Find next available semester course to pair
+        // Find next available semester course
         for(let j=idx+1; j<userState.cart.electives.length; j++) {
             if(!processed.has(j) && userState.cart.electives[j].credits===0.5) { partner=j; break; }
         }
 
         const p1Title = c.title;
+        // Check if partner exists, otherwise placeholder
         const p2Title = partner!==-1 ? userState.cart.electives[partner].title : "<span style='color:#ccc; font-style:italic;'>-- Select Semester 2 --</span>";
 
         row.innerHTML = `
@@ -1160,17 +1183,24 @@ class TourGuide {
                 
                 <div class="cart-item">
                     <span class="cart-title">${p1Title}</span>
-                    <span class="del del-c">&times;</span>
+                    <span class="del del-c" style="cursor:pointer; color:#c00; font-weight:bold; padding:0 5px;">&times;</span>
                 </div>
                 
                 <div class="cart-item" style="border-top:1px dashed #eee;">
                     <span class="cart-title">${p2Title}</span>
-                    ${partner!==-1 ? '<span class="del del-p">&times;</span>' : ''}
+                    ${partner!==-1 ? '<span class="del del-p" style="cursor:pointer; color:#c00; font-weight:bold; padding:0 5px;">&times;</span>' : ''}
                 </div>
             </div>`;
             
-        row.querySelector('.del-c').onclick = function() { remElec(idx); };
-        if(partner!==-1) row.querySelector('.del-p').onclick = function() { remElec(partner); };
+        // Explicit binding for the first semester (idx)
+        const delBtn1 = row.querySelector('.del-c');
+        if(delBtn1) delBtn1.onclick = function() { remElec(idx); };
+
+        // Explicit binding for the partner semester (partner)
+        if(partner!==-1) {
+            const delBtn2 = row.querySelector('.del-p');
+            if(delBtn2) delBtn2.onclick = function() { remElec(partner); };
+        }
         
         processed.add(idx); 
         if(partner!==-1) processed.add(partner);
@@ -1501,23 +1531,6 @@ class TourGuide {
     sendToGoogleForm();
   }
 
-  function remElec(i) { 
-      userState.cart.electives.splice(i,1); 
-      renderCart(); 
-      refreshCatalog(); // <--- This is the fix
-  }
-  
-  function remAlt(i) { 
-      userState.cart.alternates.splice(i,1); 
-      renderCart(); 
-      refreshCatalog(); // <--- This is the fix
-  }
-
-  // Helper to re-render the current catalog tab
-  function refreshCatalog() {
-      const activeBtn = document.querySelector('.tab-cat.active');
-      if(activeBtn) renderCatalog(activeBtn.dataset.type, activeBtn);
-  }
 
   
 })();
