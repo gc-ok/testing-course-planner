@@ -1253,8 +1253,23 @@ class TourGuide {
     });
   }
 
-  function remElec(i) { userState.cart.electives.splice(i,1); renderCart(); }
-  function remAlt(i) { userState.cart.alternates.splice(i,1); renderCart(); }
+  function remElec(i) { 
+      userState.cart.electives.splice(i,1); 
+      renderCart(); 
+      refreshCatalog(); // <--- This is the fix
+  }
+  
+  function remAlt(i) { 
+      userState.cart.alternates.splice(i,1); 
+      renderCart(); 
+      refreshCatalog(); // <--- This is the fix
+  }
+
+  // Helper to re-render the current catalog tab
+  function refreshCatalog() {
+      const activeBtn = document.querySelector('.tab-cat.active');
+      if(activeBtn) renderCatalog(activeBtn.dataset.type, activeBtn);
+  }
   
   function swapHonors(coreIndex, subIndex) {
     pendingCourseSwap = { coreIndex: coreIndex, subIndex: subIndex };
