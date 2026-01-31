@@ -1012,12 +1012,12 @@ class TourGuide {
           // FIX: Target only the FIRST slot, or fallback to the list if empty
           target: document.querySelector('#catalogList .slot') ? '#catalogList .slot:first-child' : '#catalogList', 
           title: 'Add Your Courses',
-          text: 'Browse the list below and click "+ ADD".\n\nYou must select enough electives to reach 7 Credits total, plus 2 Alternates.'
+          text: 'Browse the list below and click "+ ADD".\n\nYou must select enough electives to reach 7 Credits total, plus 2 Alternates.\n\nNote that some classes have prerequistes (classes you must have already passed) and fees.'
         },
         {
           target: '#btn-finish',
           title: 'Review & Submit',
-          text: 'Once your "Credits" counter at the top left says 7/7, click here to finalize your schedule.'
+          text: 'Once your "Credits" counter at the top left says 7/7,  and you have added alternate elective classes, click here to finalize your schedule.'
         }
       ]);
 
