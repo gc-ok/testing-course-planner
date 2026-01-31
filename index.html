@@ -228,33 +228,34 @@
       box-shadow: 0 2px 5px rgba(0,0,0,0.1);
   }
 
-/* --- STICKY SIDEBAR (UPDATED) --- */
+  /* --- STICKY SIDEBAR (FIXED HEIGHT) --- */
   #mhs-app-root .col-left { 
       position: sticky; 
       top: 20px; 
       align-self: start; 
       z-index: 100; 
       
-      /* --- FIX FOR SUBMIT BUTTON --- */
-      /* 1. Limit height to the screen height minus a little buffer */
-      max-height: calc(100vh - 40px); 
+      /* FIX: Use 75vh instead of 100vh. 
+         This leaves room for the school website header above the tool 
+         so the bottom button doesn't get pushed off screen. */
+      max-height: 75vh; 
       
-      /* 2. Add a scrollbar INSIDE the sidebar if it gets too tall */
+      /* Internal scrolling */
       overflow-y: auto; 
       
-      /* 3. Make the scrollbar look nice (optional) */
-      scrollbar-width: thin; 
+      /* Add breathing room at the bottom so the button isn't tight to the edge */
+      padding-bottom: 30px; 
   }
 
-  /* Disable sticky on mobile so it doesn't block the screen */
+  /* Disable sticky on mobile */
   @media (max-width: 768px) {
       #mhs-app-root .col-left { 
           position: static; 
-          max-height: none; /* Remove limit on mobile */
+          max-height: none; 
           overflow-y: visible; 
       }
   }
-
+  
   /* --- UPDATED TOUR STYLES --- */
   #mhs-app-root .tour-overlay {
     position: fixed; top: 0; left: 0; width: 100%; height: 100%;
