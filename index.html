@@ -228,19 +228,39 @@
       box-shadow: 0 2px 5px rgba(0,0,0,0.1);
   }
 
-  /* --- TOUR GUIDE STYLES --- */
+/* --- STICKY SIDEBAR (New) --- */
+  #mhs-app-root .col-left { 
+      position: sticky; 
+      top: 20px; /* distance from top of screen */
+      align-self: start; /* required for flexbox sticky */
+      height: fit-content; 
+      z-index: 100; /* Ensure it stays above content */
+  }
+
+  /* Disable sticky on mobile so it doesn't block the screen */
+  @media (max-width: 768px) {
+      #mhs-app-root .col-left { position: static; }
+  }
+
+  /* --- UPDATED TOUR STYLES --- */
   #mhs-app-root .tour-overlay {
     position: fixed; top: 0; left: 0; width: 100%; height: 100%;
     background: rgba(0, 0, 0, 0.7); z-index: 9998;
     display: none; opacity: 0; transition: opacity 0.3s;
   }
+  
+  /* FIX: Only add white background if it's NOT a button (prevents red button from turning white) */
   #mhs-app-root .tour-active-element {
     position: relative; z-index: 9999 !important;
-    background: white; /* Ensure transparency doesn't break effect */
-    box-shadow: 0 0 0 4px #D21F28, 0 0 20px rgba(0,0,0,0.5); /* Highlight ring */
+    box-shadow: 0 0 0 4px #D21F28, 0 0 20px rgba(0,0,0,0.5);
     border-radius: 4px;
-    pointer-events: none; /* Prevent clicking during tour unless needed */
+    pointer-events: none;
   }
+  /* Only give background to containers, not buttons */
+  #mhs-app-root .tour-active-element:not(.btn) {
+      background: white; 
+  }
+
   #mhs-app-root .tour-tooltip {
     position: absolute; width: 300px; background: white; z-index: 10000;
     padding: 20px; border-radius: 8px; box-shadow: 0 4px 20px rgba(0,0,0,0.3);
@@ -254,7 +274,10 @@
   #mhs-app-root .tour-body { font-size: 13px; line-height: 1.5; color: #444; margin-bottom: 15px; white-space: pre-wrap; }
   #mhs-app-root .tour-footer { display: flex; justify-content: flex-end; gap: 8px; }
   
-  @keyframes tourPop { from { opacity: 0; transform: scale(0.9) translateY(10px); } to { opacity: 1; transform: scale(1) translateY(0); } }
+  /* FIX: Force colors for tour buttons so they aren't invisible */
+  #mhs-app-root .tour-footer .btn-red { background: #D21F28 !important; color: white !important; }
+  #mhs-app-root .tour-footer .btn-sm { border: 1px solid #ddd; }
+  
 </style>
 
 <div id="mhs-app-root">
@@ -959,6 +982,7 @@ class TourGuide {
     // Optional: check localStorage if you only want it to run once per user
     if(!localStorage.getItem('mhs_tour_seen')) { 
       
+      // Define tour steps
       const tour = new TourGuide([
         {
           target: '#coreSlots',
@@ -971,7 +995,8 @@ class TourGuide {
           text: 'Use these tabs to browse courses.\n\nREQUIREMENTS (Over 4 Years):\n• 6 Pathway Courses\n• 2 Required Electives (Language, Fine Arts, Tech)\n• 3 General Electives'
         },
         {
-          target: '#catalogList', 
+          // FIX: Target only the FIRST slot, or fallback to the list if empty
+          target: document.querySelector('#catalogList .slot') ? '#catalogList .slot:first-child' : '#catalogList', 
           title: 'Add Your Courses',
           text: 'Browse the list below and click "+ ADD".\n\nYou must select enough electives to reach 7 Credits total, plus 2 Alternates.'
         },
@@ -983,8 +1008,7 @@ class TourGuide {
       ]);
 
       // Small delay to ensure view is rendered
-      setTimeout(() => tour.start(), 500);
-      
+      setTimeout(() => tour.start(), 500);      
     } // end localStorage check
   }
 
