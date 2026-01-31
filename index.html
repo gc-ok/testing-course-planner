@@ -1067,25 +1067,6 @@ class TourGuide {
     return cores;
   }
 
-  // --- UPDATED REMOVE FUNCTIONS ---
-  function remElec(i) { 
-      userState.cart.electives.splice(i,1); 
-      renderCart(); 
-      refreshCatalog(); 
-  }
-   
-  function remAlt(i) { 
-      userState.cart.alternates.splice(i,1); 
-      renderCart(); 
-      refreshCatalog(); 
-  }
-
-  function refreshCatalog() {
-      const activeBtn = document.querySelector('.tab-cat.active');
-      if(activeBtn && activeBtn.dataset.type) {
-          renderCatalog(activeBtn.dataset.type, activeBtn);
-      }
-  }
 
   // Helper to create a safe Delete Button
   function createDelBtn(onClickFunc) {
@@ -1098,7 +1079,33 @@ class TourGuide {
       return btn;
   }
 
-  // --- UPDATED RENDER CART (DOM ELEMENT APPROACH) ---
+  // --- UPDATED REMOVE FUNCTIONS ---
+  function remElec(i) { 
+      // 1. Remove from array
+      userState.cart.electives.splice(i,1); 
+      // 2. Re-draw the Left Column
+      renderCart(); 
+      // 3. Re-draw the Right Column (to show "+ ADD" button again)
+      refreshCatalog(); 
+  }
+   
+  function remAlt(i) { 
+      userState.cart.alternates.splice(i,1); 
+      renderCart(); 
+      refreshCatalog(); 
+  }
+
+  // --- CATALOG REFRESHER ---
+  function refreshCatalog() {
+      // Find the currently active tab button
+      const activeBtn = document.querySelector('.tab-cat.active');
+      // If we are viewing a list, re-run the render function for that list
+      if(activeBtn && activeBtn.dataset.type) {
+          renderCatalog(activeBtn.dataset.type, activeBtn);
+      }
+  }
+
+  // --- FIXED RENDER CART ---
   function renderCart() {
     // 1. Calculate Total Credits
     let tot = 0;
@@ -1106,7 +1113,7 @@ class TourGuide {
     userState.cart.electives.forEach(c => tot+=c.credits);
     document.getElementById('slotCount').innerText = tot;
 
-    // 2. Render CORE (Standard)
+    // 2. Render CORE
     const cDiv = document.getElementById('coreSlots'); 
     cDiv.innerHTML='';
     
@@ -1148,30 +1155,30 @@ class TourGuide {
       cDiv.appendChild(row);
     });
 
-    // 3. Render ELECTIVES (Safe Mode)
+    // 3. Render ELECTIVES (FIXED LOGIC)
     const eDiv = document.getElementById('flexSlots'); 
     eDiv.innerHTML='';
     const processed = new Set();
     let count=1;
 
     userState.cart.electives.forEach((c, idx) => {
-      if(processed.has(idx)) return;
+      if(processed.has(idx)) return; // Skip if already handled in a pair
       const row = document.createElement('div');
       
       if(c.credits >= 1) {
         // --- FULL YEAR ELECTIVE ---
-        // Create the HTML structure, but leave the button area prepared
+        // We include the <span class="del"> directly in the string
         row.innerHTML = `
-            <div class="cart-item" id="elec-row-${idx}" style="border-left: 4px solid #FF9800;">
+            <div class="cart-item" style="border-left: 4px solid #FF9800;">
                 <div>
                     <span class="cart-label">Elective ${count}</span>
                     <span class="cart-title">${c.title}</span>
                 </div>
-                </div>`;
+                <span class="del" style="cursor:pointer; padding:0 5px;">&times;</span>
+            </div>`;
         
-        // Inject Button Safely
-        const btn = createDelBtn(() => remElec(idx));
-        row.querySelector('.cart-item').appendChild(btn);
+        // Find that specific .del span we just wrote and bind the click
+        row.querySelector('.del').onclick = function() { remElec(idx); };
         
         processed.add(idx);
 
@@ -1185,30 +1192,28 @@ class TourGuide {
         const p1Title = c.title;
         const p2Title = partner!==-1 ? userState.cart.electives[partner].title : "<span style='color:#ccc; font-style:italic;'>-- Select Semester 2 --</span>";
 
-        // We add unique IDs (sem-1-row, sem-2-row) to find them easily
+        // We give unique classes 'del-top' and 'del-bot' to distinguish the two buttons
         row.innerHTML = `
             <div style="border-left: 4px solid #FF9800; background:white; border-bottom:1px solid #ddd;">
                 <div class="split-header" style="background:#fff3e0; color:#e65100;">Elective ${count} (Semesters)</div>
                 
-                <div class="cart-item sem-1-row">
+                <div class="cart-item">
                     <span class="cart-title">${p1Title}</span>
+                    <span class="del del-top" style="cursor:pointer; color:#c00; font-weight:bold; padding:0 5px;">&times;</span>
                 </div>
                 
-                <div class="cart-item sem-2-row" style="border-top:1px dashed #eee;">
+                <div class="cart-item" style="border-top:1px dashed #eee;">
                     <span class="cart-title">${p2Title}</span>
+                    ${partner!==-1 ? '<span class="del del-bot" style="cursor:pointer; color:#c00; font-weight:bold; padding:0 5px;">&times;</span>' : ''}
                 </div>
             </div>`;
             
-        // 1. Attach Remove to Top Item (idx)
-        const topRow = row.querySelector('.sem-1-row');
-        const btn1 = createDelBtn(() => remElec(idx));
-        topRow.appendChild(btn1);
+        // Bind Top Button (Current Index)
+        row.querySelector('.del-top').onclick = function() { remElec(idx); };
 
-        // 2. Attach Remove to Bottom Item (partner)
+        // Bind Bottom Button (Partner Index) - ONLY if partner exists
         if(partner!==-1) {
-            const botRow = row.querySelector('.sem-2-row');
-            const btn2 = createDelBtn(() => remElec(partner));
-            botRow.appendChild(btn2);
+            row.querySelector('.del-bot').onclick = function() { remElec(partner); };
         }
         
         processed.add(idx); 
@@ -1234,12 +1239,9 @@ class TourGuide {
                     <span class="cart-label" style="color:#666;">Alternate ${i+1}</span>
                     <span class="cart-title" style="font-size:13px;">${c.title}</span>
                 </div>
+                <span class="del" style="cursor:pointer;">&times;</span>
             </div>`;
-            
-        // Inject Button Safely
-        const btn = createDelBtn(() => remAlt(i));
-        d.querySelector('.cart-item').appendChild(btn);
-        
+        d.querySelector('.del').onclick = function() { remAlt(i); };
         aDiv.appendChild(d);
     });
   }
