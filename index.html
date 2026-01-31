@@ -227,6 +227,34 @@
       color: #D21F28 !important; /* School Red */
       box-shadow: 0 2px 5px rgba(0,0,0,0.1);
   }
+
+  /* --- TOUR GUIDE STYLES --- */
+  #mhs-app-root .tour-overlay {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0, 0, 0, 0.7); z-index: 9998;
+    display: none; opacity: 0; transition: opacity 0.3s;
+  }
+  #mhs-app-root .tour-active-element {
+    position: relative; z-index: 9999 !important;
+    background: white; /* Ensure transparency doesn't break effect */
+    box-shadow: 0 0 0 4px #D21F28, 0 0 20px rgba(0,0,0,0.5); /* Highlight ring */
+    border-radius: 4px;
+    pointer-events: none; /* Prevent clicking during tour unless needed */
+  }
+  #mhs-app-root .tour-tooltip {
+    position: absolute; width: 300px; background: white; z-index: 10000;
+    padding: 20px; border-radius: 8px; box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+    display: none; animation: tourPop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  }
+  #mhs-app-root .tour-tooltip::after {
+    content: ''; position: absolute; top: -8px; left: 20px;
+    border-width: 0 8px 8px; border-style: solid; border-color: transparent transparent #fff transparent;
+  }
+  #mhs-app-root .tour-header { font-weight: 900; color: #D21F28; font-size: 16px; margin-bottom: 8px; text-transform: uppercase; }
+  #mhs-app-root .tour-body { font-size: 13px; line-height: 1.5; color: #444; margin-bottom: 15px; white-space: pre-wrap; }
+  #mhs-app-root .tour-footer { display: flex; justify-content: flex-end; gap: 8px; }
+  
+  @keyframes tourPop { from { opacity: 0; transform: scale(0.9) translateY(10px); } to { opacity: 1; transform: scale(1) translateY(0); } }
 </style>
 
 <div id="mhs-app-root">
@@ -433,6 +461,119 @@
 </div>
 
 <script>
+
+  // --- TOUR GUIDE CLASS (Paste before main script) ---
+class TourGuide {
+  constructor(steps) {
+    this.steps = steps;
+    this.currentStep = 0;
+    this.overlay = null;
+    this.tooltip = null;
+  }
+
+  init() {
+    // Create UI Elements
+    if (!document.getElementById('tour-overlay')) {
+      const root = document.getElementById('mhs-app-root');
+      
+      this.overlay = document.createElement('div');
+      this.overlay.className = 'tour-overlay';
+      this.overlay.id = 'tour-overlay';
+      root.appendChild(this.overlay);
+
+      this.tooltip = document.createElement('div');
+      this.tooltip.className = 'tour-tooltip';
+      this.tooltip.innerHTML = `
+        <div class="tour-header" id="tour-title"></div>
+        <div class="tour-body" id="tour-text"></div>
+        <div class="tour-footer">
+           <button class="btn-sm" id="tour-skip">Skip</button>
+           <button class="btn btn-red btn-sm" id="tour-next">Next</button>
+        </div>
+      `;
+      root.appendChild(this.tooltip);
+
+      // Bind Events
+      document.getElementById('tour-next').onclick = () => this.next();
+      document.getElementById('tour-skip').onclick = () => this.end();
+    } else {
+      this.overlay = document.getElementById('tour-overlay');
+      this.tooltip = document.querySelector('.tour-tooltip');
+    }
+  }
+
+  start() {
+    this.init();
+    this.currentStep = 0;
+    this.overlay.style.display = 'block';
+    setTimeout(() => this.overlay.style.opacity = '1', 10);
+    this.showStep();
+  }
+
+  showStep() {
+    const step = this.steps[this.currentStep];
+    const target = document.querySelector(step.target);
+
+    // Reset previous highlights
+    document.querySelectorAll('.tour-active-element').forEach(el => el.classList.remove('tour-active-element'));
+    this.tooltip.style.display = 'none';
+
+    if (!target) {
+        console.warn('Tour target missing:', step.target);
+        this.next(); 
+        return; 
+    }
+
+    // Scroll to target
+    target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+    // Highlight Target
+    target.classList.add('tour-active-element');
+
+    // Update Content
+    document.getElementById('tour-title').innerText = step.title;
+    document.getElementById('tour-text').innerText = step.text;
+    document.getElementById('tour-next').innerText = (this.currentStep === this.steps.length - 1) ? 'Finish' : 'Next →';
+
+    // Position Tooltip (Basic Logic)
+    setTimeout(() => {
+        const rect = target.getBoundingClientRect();
+        const rootRect = document.getElementById('mhs-app-root').getBoundingClientRect();
+        
+        let top = (rect.bottom - rootRect.top) + 15;
+        let left = (rect.left - rootRect.left);
+
+        // Edge check (keep inside container)
+        if (left + 300 > rootRect.width) left = rootRect.width - 320;
+        if (left < 0) left = 10;
+
+        this.tooltip.style.top = top + 'px';
+        this.tooltip.style.left = left + 'px';
+        this.tooltip.style.display = 'block';
+    }, 400); // Wait for scroll
+  }
+
+  next() {
+    this.currentStep++;
+    if (this.currentStep >= this.steps.length) {
+      this.end();
+    } else {
+      this.showStep();
+    }
+  }
+
+  end() {
+    this.overlay.style.opacity = '0';
+    this.tooltip.style.display = 'none';
+    document.querySelectorAll('.tour-active-element').forEach(el => el.classList.remove('tour-active-element'));
+    setTimeout(() => {
+        this.overlay.style.display = 'none';
+        // Optional: Save to localStorage so it doesn't show again
+        // localStorage.setItem('mhs_tour_seen', 'true'); 
+    }, 300);
+  }
+}
+  
 (function() {
   // ===============================================
   //  CONFIG: PASTE YOUR UPLOADED FILE LINK BELOW
@@ -811,8 +952,40 @@
     // Auto-select the "My Pathway" tab
     const pathBtn = document.querySelector('.tab-cat[data-type="pathway"]');
     if(pathBtn) pathBtn.click();
-    
+
     showView('view-shopping');
+
+    // --- NEW: TRIGGER TOUR ---
+    // Optional: check localStorage if you only want it to run once per user
+    if(!localStorage.getItem('mhs_tour_seen')) { 
+      
+      const tour = new TourGuide([
+        {
+          target: '#coreSlots',
+          title: 'Review Core Classes',
+          text: 'These are your pre-assigned core courses.\n\nNeed Honors or AP? Click the "Swap" button on any core class to change the level.'
+        },
+        {
+          target: '.tab-group',
+          title: 'Choose Electives',
+          text: 'Use these tabs to browse courses.\n\nREQUIREMENTS (Over 4 Years):\n• 6 Pathway Courses\n• 2 Required Electives (Language, Fine Arts, Tech)\n• 3 General Electives'
+        },
+        {
+          target: '#catalogList', 
+          title: 'Add Your Courses',
+          text: 'Browse the list below and click "+ ADD".\n\nYou must select enough electives to reach 7 Credits total, plus 2 Alternates.'
+        },
+        {
+          target: '#btn-finish',
+          title: 'Review & Submit',
+          text: 'Once your "Credits" counter at the top left says 7/7, click here to finalize your schedule.'
+        }
+      ]);
+
+      // Small delay to ensure view is rendered
+      setTimeout(() => tour.start(), 500);
+      
+    } // end localStorage check
   }
 
   // Helper to find exact course or fallback
