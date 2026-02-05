@@ -447,10 +447,30 @@ class TourGuide {
   let pendingSwap = null;
 
   const ALLOWED_SWAPS = {
-    "9": { "English": ["English I", "English I Accelerated"], "History": ["Oklahoma History", "Oklahoma History Accelerated"], "Science": ["Physical Science", "Biology Accelerated"], "Math": ["Algebra I", "Algebra I Accelerated", "Geometry", "Geometry Accelerated"] },
-    "10": { "English": ["English II", "English II Accelerated"], "History": ["World History", "AP World History"], "Science": ["Biology", "Biology Accelerated", "Chemistry", "Chemistry Accelerated"], "Math": ["Geometry", "Geometry Accelerated", "Algebra II", "Algebra II Accelerated"] },
-    "11": { "English": ["English III", "AP English Language & Composition"], "History": ["US History", "AP US History"], "Math": ["Algebra II", "Intermediate Algebra", "AP Statistics", "AP Calculus AB"], "Science": ["Chemistry", "AP Physics I", "Anatomy & Physiology"] },
-    "12": { "English": ["English IV", "AP English Literature & Composition"], "History": ["American Government", "AP US Government and Politics"], "Math": ["Algebra II", "Algebra III", "Business Math"], "Science": ["Physics", "Forensic Science", "AP Biology"] }
+    "9": {
+        "English": ["English I", "English I Accelerated"],
+        "History": ["Oklahoma History", "Oklahoma History Accelerated"],
+        "Science": ["Physical Science", "Biology Accelerated"],
+        "Math": ["Algebra I", "Algebra I Accelerated", "Geometry", "Geometry Accelerated"]
+    },
+    "10": {
+        "English": ["English II", "English II Accelerated"],
+        "History": ["World History", "AP World History"], 
+        "Science": ["Biology", "Biology Accelerated", "Chemistry", "Chemistry Accelerated", "Physics"],
+        "Math": ["Geometry", "Geometry Accelerated", "Algebra II", "Algebra II Accelerated", "STEM Algebra II Accelerated"]
+    },
+    "11": {
+        "English": ["English III", "AP English Language & Composition"],
+        "History": ["US History", "AP US History"],
+        "Math": ["Algebra II", "Algebra II Accelerated", "STEM Algebra II Accelerated", "Intermediate Algebra", "PreCalculus Accelerated", "Algebra III", "Business Math", "AP PreCalculus", "AP Calculus AB", "AP Calculus BC", "Sports Statistics and Probability", "AP Statistics"],
+        "Science": ["Physical Science", "Chemistry", "Chemistry Accelerated", "Chemistry II", "AP Chemistry", "Physics", "AP Physics I", "AP Physics II", "STEM Physics Accelerated", "Zoology", "Zoology II", "Forensic Science", "Anatomy & Physiology", "AP Biology", "Environmental Science and Natural Resources", "AP Environmental Science", "Earth and Space Science"]
+    },
+    "12": {
+        "English": ["English IV", "AP English Literature & Composition"],
+        "History": ["American Government", "AP US Government and Politics"],
+        "Math": ["Algebra II", "Algebra II Accelerated", "STEM Algebra II Accelerated", "Intermediate Algebra", "PreCalculus Accelerated", "Algebra III", "Business Math", "AP PreCalculus", "AP Calculus AB", "AP Calculus BC", "Sports Statistics and Probability", "AP Statistics"],
+        "Science": ["Physical Science", "Chemistry", "Chemistry Accelerated", "Chemistry II", "AP Chemistry", "Physics", "AP Physics I", "AP Physics II", "STEM Physics Accelerated", "Zoology", "Zoology II", "Forensic Science", "Anatomy & Physiology", "AP Biology", "Environmental Science and Natural Resources", "AP Environmental Science", "Earth and Space Science"]
+    }
   };
 
   // Add this to your script to handle all course removals
